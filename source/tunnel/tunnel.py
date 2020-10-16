@@ -5,7 +5,7 @@ from socket import error as _error
 from threading import Thread
 from sys import exit
 from time import sleep
-from os import popen,path as pathlib
+from os import environ,path as pathlib
 from logger import Logger
 
 import socket as s
@@ -20,12 +20,11 @@ header_data_types = {
 }
 
 
-_USERNAME,_ = popen("whoami").read().split("\n") 
-_PATH       = pathlib.join("/home/",_USERNAME,".transferpi")
-_LOGGER     = Logger()
+_PATH       = pathlib.join(environ['HOME'],".transferpi")
+_LOGGER     = Logger(out=pathlib.join(_PATH,"logs","tunnel_logs.txt"))
 
 try:_CONFIG = loads(open(pathlib.join(_PATH,"config.json"),"r").read())
-except:exit(0)
+except:exit(print ("Error, Config Found !"))
 
 def http_message(message:str)->str:
     header = Header() 
@@ -243,7 +242,7 @@ def main():
 	print (f"* Number Of Pools : {_CONFIG['server_config']['local']['n_pools']}")
 
 	pools = []
-	for i in range(6):#_CONFIG['server_config']['local']['n_pools']):
+	for i in range(_CONFIG['server_config']['local']['n_pools']):
 		pool = Thread(target=createTunnel,kwargs={"_id":i,"_config":_CONFIG})
 		pool.start()
 		pools.append(pool)

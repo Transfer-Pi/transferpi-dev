@@ -1,7 +1,7 @@
-import sys
 import time
 
-from os import popen,path as pathlib
+from os import environ,path as pathlib,popen
+from sys import exit
 from json import loads
 
 from flask import Flask,request,send_file,make_response,render_template
@@ -13,20 +13,23 @@ from hashlib import md5
 from requests import post
 
 import jsondb
+import logger
 
-_USERNAME,_ = popen("whoami").read().split("\n") 
-_PATH       = pathlib.join("/home/",_USERNAME,".transferpi")
+
+_PATH   = pathlib.join(environ['HOME'],".transferpi")
+_LOGGER = logger.Logger(out=pathlib.join(_PATH,"logs","server_logs.txt"))
 
 try:_CONFIG = loads(open(pathlib.join(_PATH,"config.json"),"r").read())
-except:exit(0)
+except:exit(print("Error, Config File Not Found !"))
 
 app = Flask(__name__,template_folder=pathlib.join(_PATH,"data","templates"))
 CORS(app=app)
 
-CONN = jsondb.connect(pathlib.join(_PATH,"data"))
+CONN = jsondb.Cursor(path=pathlib.join(_PATH,"data"),logger=_LOGGER)
 CONN.createDB("TPI")
 
 DB = CONN.TPI
+DB._logger = _LOGGER
 DB.createTable("tokens","token")
 DB.createTable("files","file")
 
@@ -85,9 +88,15 @@ class FileManager:
                 response.headers['Md5'] = rec.md5
                 return response
             else:
-                return "File Does Not Exist !",404
+                return {
+                        "message":"File Does Not Exist !",
+                        "status":False
+                },404
         else:
-            return "File Not Found !",404
+            return {
+                    "message":"File Not Found !",
+                    "status":False
+                },404
 
     def POST(self,request:request,*args,**kwargs)->dict:
         data = request.get_json()

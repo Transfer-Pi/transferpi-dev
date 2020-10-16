@@ -1,4 +1,4 @@
-from os import path as pathlib,popen
+from os import path as pathlib,environ
 from argparse import ArgumentParser
 from requests import post
 from requests.exceptions import ConnectionError
@@ -21,8 +21,7 @@ windows    : ⭕
 mac        : ⭕
 """
 
-_USERNAME,_ = popen("whoami").read().split("\n") 
-_PATH       = pathlib.join("/home/",_USERNAME,".transferpi")
+_PATH       = pathlib.join(environ['HOME'],".transferpi")
 _REQUEST = dict(
     file=None,
     type=None,
@@ -57,7 +56,7 @@ def main(args):
         for i in response:
             print (f"[+] {i}{' '*(16-len(i))}: {response[i]}")
     else:
-        print (response.json()['message'])
+        print (response.text)
 
 if __name__ == "__main__":
     args = parser.parse_args()

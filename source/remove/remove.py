@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 from requests import delete
 from requests.exceptions import ConnectionError
 from json import loads
+from sys import exit
 
 
 parser = ArgumentParser()
