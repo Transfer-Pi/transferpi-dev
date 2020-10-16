@@ -198,6 +198,6 @@ if __name__ == "__main__":
     app.run(
             host=_CONFIG['server_config']['local']['host'],
             port=_CONFIG['server_config']['local']['port'],
-            debug=False
+            debug=True
         )
 

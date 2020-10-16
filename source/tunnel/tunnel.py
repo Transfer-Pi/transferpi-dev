@@ -21,7 +21,7 @@ header_data_types = {
 
 
 _PATH       = pathlib.join(environ['HOME'],".transferpi")
-_LOGGER     = Logger(out=pathlib.join(_PATH,"logs","tunnel_logs.txt"))
+_LOGGER     = Logger()#out=pathlib.join(_PATH,"logs","tunnel_logs.txt"))
 
 try:_CONFIG = loads(open(pathlib.join(_PATH,"config.json"),"r").read())
 except:exit(print ("Error, Config Found !"))
@@ -216,8 +216,8 @@ class Tunnel:
 	def forward(self,):
 		self._createLocalTunnel()
 		try:
-			pump(self.tunnel,self.local,_CONFIG['server_config']['local']['chunk_size'],_timeout=60)
-			pump(self.local,self.tunnel,_CONFIG['server_config']['local']['chunk_size'])
+			pump(self.tunnel,self.local,_CONFIG['server_config']['local']['chunk_size'],_timeout=30)
+			pump(self.local,self.tunnel,_CONFIG['server_config']['local']['chunk_size'],_timeout=30)
 		except s.timeout:
 			pass
 

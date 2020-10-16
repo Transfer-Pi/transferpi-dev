@@ -8,8 +8,71 @@ import CloseLogo from './icons/close.svg';
 
 import './App.css';
 
+const Card = (props) =>{
+  return (
+    <div className="card" key={props.i}>
+      {
+        props.labels.map((l,j)=>{
+          return (
+            <div className="row" key={j}>
+              <div className="col label">
+                {l}
+              </div>
+              <div className="col colon">
+                :
+              </div>
+              <div className="col values">
+                {props.row[l]}
+              </div>
+            </div>
+          )
+        })
+      }
+    </div>
+  )
+}
+const New = (props) =>{
+
+  const AddButton = (props) =>{
+    return(
+      <div className="card new">
+        <img src={PlusLogo} alt="plus-logo" style={{height:"64px",width:"64px"}} onClick={loadForm} />
+      </div>
+    )
+  }
+
+  const NewForm = (props) =>{
+    return (
+      <div className="card">
+        <div className="newform">
+          <input type="text" placeholder="file" />
+          <input type="text" placeholder="type" />
+        </div>
+      </div>
+    )
+  }
+
+  let [render,renderState] = React.useState({
+    component:<AddButton />
+  })
+
+  function loadForm(){
+    renderState({
+      component:<NewForm />
+    })  
+  }
+
+  return(
+    <div>
+      {
+        render.component
+      }
+    </div>
+  )
+}
+
 function App() {
-  let labels = ['filename','token','type','md5','time']
+  let labels = ['filename','token','type','md5','time','url']
   let [data,dataState] = React.useState({
     tokens:[]
   })
@@ -46,34 +109,9 @@ function App() {
             </div>
           </div>
           <div className="tron">
-            <div className="card new">
-                <img src={PlusLogo} alt="plus-logo" style={{height:"64px",width:"64px"}} />
-            </div>
+            <New />  
             {data.tokens.map((row,i)=>{
-              return (
-                <div className="card" key={i}>
-                  {
-                    labels.map((l,j)=>{
-                      return (
-                        <div className="row" key={j}>
-                          <div className="col label">
-                            {l}
-                          </div>
-                          <div className="col colon">
-                            :
-                          </div>
-                          <div className="col values">
-                            {row[l]}
-                          </div>
-                        </div>
-                      )
-                    })
-                  }
-                  <div className="close-btn">
-                    <img src={CloseLogo} alt="close" style={{height:"20px"}} />
-                  </div>
-                </div>
-              )
+              return <Card row={row} i={i} labels={labels} />
             })}
           </div>
         </div>

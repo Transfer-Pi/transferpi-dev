@@ -1,4 +1,4 @@
-[import watcher
+import watcher
 
 config = {
     "proc":watcher.PROCESS,

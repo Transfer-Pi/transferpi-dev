@@ -4,7 +4,8 @@
 
 /* Track */
 ::-webkit-scrollbar-track {
-  background: #ffffff;
+  background: white;
+  border-radius: 2px;
 }
 
 /* Handle */
@@ -45,20 +46,15 @@ section{
 
 .tron{
   margin-top: 5vh;
-  height: 73vh ;
+  height: 73vh;
   padding-right: 10px;
   overflow-y: scroll;
   overflow-x: hidden;
   display: grid;
-  grid-template-columns: repeat( auto-fit, minmax(400px, 1fr) );;
+  grid-template-columns: repeat( auto-fit, minmax(30vw, 1fr) );;
   grid-gap: 1vh;
 }
 
-.card{
-  border: 5px solid #333333;
-  height: 18.5vh;
-  padding: 2vh;
-}
 
 .close-btn{
   position: relative;
@@ -81,11 +77,17 @@ section{
   cursor: pointer;
 }
 
+.card{
+  border: 5px solid #333333;
+  height: 20vh;
+  padding: 2vh;
+  display: grid;
+}
+
 .row{
   display: grid;
   grid-template-columns: 4fr 1fr 14fr;
-  margin: 9px 0px;
-  height: 15%;
+  /* margin: 9px 0px; */
 }
 
 .row .col{
@@ -108,3 +110,15 @@ section{
 }
 
 
+.newform{
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  flex-direction: column;
+}
+
+.newform input{
+  height: 30px;
+  border: 5px solid #333333;
+}
