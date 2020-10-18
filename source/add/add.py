@@ -16,12 +16,12 @@ parser.add_argument("--local",help="set this true when sharing file locally",typ
 """
 App Config
 
-linux/unix : ✔️
-windows    : ⭕
+linux/unix : ⭕
+windows    : ✔️
 mac        : ⭕
 """
 
-_PATH       = pathlib.join(environ['HOME'],".transferpi")
+_PATH       = pathlib.join(environ['USERPROFILE'],".transferpi")
 _REQUEST = dict(
     file=None,
     type=None,
@@ -34,15 +34,12 @@ except:exit(print("Config File Not Fouund !"))
 def main(args):
     file = pathlib.abspath(args.file)
     if not pathlib.isfile(file):
-        print("File Does Not Exist ¯\\_(ツ)_/¯")
-        exit(0)
-
+        exit(print("File Does Not Exist ¯\\_(ツ)_/¯"))
     _REQUEST['file'] = file
     _REQUEST['type'] = args.type
-    
     try:
         response = post(
-                "http://localhost:2121/file/new",
+                f"http://localhost:{_CONFIG['server_config']['local']['port']}/file/new",
                 json=_REQUEST,
                 headers={
                     "Authentication":_CONFIG['account_keys']['private']
@@ -50,7 +47,7 @@ def main(args):
             )        
     except ConnectionError:
         exit(print ("Error, Fileserver Not Running"))
-
+        
     if response.status_code == 200:
         response = loads(response.text)
         for i in response:

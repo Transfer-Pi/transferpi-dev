@@ -2,7 +2,7 @@ import watcher
 
 config = {
     "proc":watcher.PROCESS,
-    "trigger":["python3","./tunnel.py"],
+    "trigger":["python","./tunnel.py"],
     "mode":0,
     "path":"./",
     "files":[

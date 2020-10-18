@@ -1,5 +1,5 @@
 from sys import exit,stdout
-from os import path as pathlib,popen
+from os import path as pathlib,popen,environ
 from argparse import ArgumentParser
 from requests import get,post
 from json import loads
@@ -17,20 +17,16 @@ parser.add_argument("--local",help="set this true when sharing file locally",typ
 """
 App Config
 
-linux/unix : ✔️
-windows    : ⭕
+linux/unix : ⭕
+windows    : ✔️
 mac        : ⭕
 """
 
-_USERNAME,_ = popen("whoami").read().split("\n") 
-_PATH       = pathlib.join("/home/",_USERNAME,".transferpi")
+_PATH       = pathlib.join(environ['USERPROFILE'],".transferpi")
 _URL        = None
 
 try: _CONFIG = loads(open(pathlib.join(_PATH,"config.json"),"r").read())
 except: exit(print("Config File Not Fouund !"))
-
-
-
 
 def main(args):
     if args.host:
@@ -42,7 +38,7 @@ def main(args):
         )
     else:
         _URL = f"{_CONFIG['server_config']['web']['host']}/token/{args.token}"
-    
+    print (_URL)
     response = get(
                 _URL,
                 stream=True,
@@ -75,7 +71,7 @@ def main(args):
         print (f"[*] Fetched {content_length//(1024*1024)} Mbs in {str(time()-start_time)[:8]} Seconds")
         print (f'[*] Cheking MD5')
 
-        md5,*_ = popen(f"md5sum {_file}").read().split(" ")
+        _,md5,_ = popen(f"CertUtil -hashfile {_file} MD5").read().split(" ")
         if md5 == response.headers['Md5'] == md5:
             print ("[*] Check Successful.")
             print (f"[*] Downloaded {response.headers['Filename']} Successfully.")

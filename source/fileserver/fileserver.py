@@ -15,8 +15,15 @@ from requests import post
 import jsondb
 import logger
 
+"""
+App Config
 
-_PATH   = pathlib.join(environ['HOME'],".transferpi")
+linux/unix : ⭕
+windows    : ✔️
+mac        : ⭕
+"""
+
+_PATH   = pathlib.join(environ['USERPROFILE'],".transferpi")
 _LOGGER = logger.Logger(out=pathlib.join(_PATH,"logs","server_logs.txt"))
 
 try:_CONFIG = loads(open(pathlib.join(_PATH,"config.json"),"r").read())
@@ -59,7 +66,7 @@ class FileManager:
 
     def GET(self,request:request,token:str):
         if token == "GET_TOKENS":
-            if request.host_url.split("//")[1][:-1] == "localhost:2121":
+            if request.host_url.split("//")[1][:-1] == f"localhost:{_CONFIG['server_config']['local']['port']}":
                 return {"tokens":self._CURSOR.tokens.fetchAll()}
             else:
                 return {
@@ -125,17 +132,16 @@ class FileManager:
         else:
             token = self.__token(4)
 
+        data['filename'] = data['file'].split("\\")[-1]
+        data['token'] = token
+        data['time']= dt.now().strftime("%Y-%m-%d %X")
+        _,data['md5'],*_ =  popen(f"CertUtil -hashfile {data['file']} MD5").read().split("\n")     
+        data['url'] = f"https://transferpi.tk/token/{token}"
+        self._CURSOR.tokens.insertOne(jsondb.Record(**data))
         self._CURSOR.files.insertOne(jsondb.Record(
             token=token,
             file = md5_sum
         ))
-
-        data['filename'] = data['file'].split("/")[-1]
-        data['token'] = token
-        data['time']= dt.now().strftime("%Y-%m-%d %X")
-        data['md5'],*_ = popen(f"md5sum {data['file']}").read().split(" ")       
-        data['url'] = f"https://transferpi.tk/token/{token}"
-        self._CURSOR.tokens.insertOne(jsondb.Record(**data))
         return data
 
     def PUT(self,request:request,*args,**kwargs):        

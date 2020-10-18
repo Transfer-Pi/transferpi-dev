@@ -11,8 +11,13 @@ from logger import Logger
 import socket as s
 import sys
 
+"""
+App Config
 
-### Halper
+linux/unix : ⭕
+windows    : ✔️
+mac        : ⭕
+"""
 
 header_data_types = {
 	'content_length':int,
@@ -20,7 +25,7 @@ header_data_types = {
 }
 
 
-_PATH       = pathlib.join(environ['HOME'],".transferpi")
+_PATH       = pathlib.join(environ['USERPROFILE'],".transferpi")
 _LOGGER     = Logger()#out=pathlib.join(_PATH,"logs","tunnel_logs.txt"))
 
 try:_CONFIG = loads(open(pathlib.join(_PATH,"config.json"),"r").read())
@@ -204,7 +209,7 @@ class Tunnel:
 			self.local.setsockopt(s.SOL_SOCKET, s.SO_REUSEADDR, 1)
 			self.local.settimeout(1)
 			self.local.connect((
-				"0.0.0.0",
+				"localhost",
 				self._config['server_config']['local']['port']
 			))
 		except:
