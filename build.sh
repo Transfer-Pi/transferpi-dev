@@ -20,6 +20,7 @@ elif [[ $1 == "dist" ]]
 then
     if [[ $# == 1 ]]
     then 
+        rm -rf dist/bin/*
         build "add"
         build "get"
         build "list"
