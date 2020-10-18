@@ -3,3 +3,4 @@ dist/
 
 source/add/temp/
 source/fileserver/node_modules/*
+.vscode
