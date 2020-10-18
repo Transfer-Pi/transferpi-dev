@@ -38,7 +38,7 @@ def main(args):
         )
     else:
         _URL = f"{_CONFIG['server_config']['web']['host']}/token/{args.token}"
-    print (_URL)
+    
     response = get(
                 _URL,
                 stream=True,
@@ -71,7 +71,7 @@ def main(args):
         print (f"[*] Fetched {content_length//(1024*1024)} Mbs in {str(time()-start_time)[:8]} Seconds")
         print (f'[*] Cheking MD5')
 
-        _,md5,_ = popen(f"CertUtil -hashfile {_file} MD5").read().split(" ")
+        _,md5,*_ = popen(f"CertUtil -hashfile {_file} MD5").read().split("\n")
         if md5 == response.headers['Md5'] == md5:
             print ("[*] Check Successful.")
             print (f"[*] Downloaded {response.headers['Filename']} Successfully.")

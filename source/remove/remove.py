@@ -1,4 +1,4 @@
-from os import path as pathlib,popen
+from os import path as pathlib,environ
 from argparse import ArgumentParser
 from requests import delete
 from requests.exceptions import ConnectionError
@@ -17,9 +17,7 @@ windows    : ⭕
 mac        : ⭕
 """
 
-_USERNAME,_ = popen("whoami").read().split("\n") 
-_PATH       = pathlib.join("/home/",_USERNAME,".transferpi")
-
+_PATH       = pathlib.join(environ['USERPROFILE'],".transferpi")
 try: _CONFIG = loads(open(pathlib.join(_PATH,"config.json"),"r").read())
 except: exit(print("Config File Not Fouund !"))
 

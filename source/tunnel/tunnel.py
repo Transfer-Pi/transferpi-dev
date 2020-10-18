@@ -26,7 +26,7 @@ header_data_types = {
 
 
 _PATH       = pathlib.join(environ['USERPROFILE'],".transferpi")
-_LOGGER     = Logger()#out=pathlib.join(_PATH,"logs","tunnel_logs.txt"))
+_LOGGER     = Logger(out=pathlib.join(_PATH,"logs","tunnel_logs.txt"))
 
 try:_CONFIG = loads(open(pathlib.join(_PATH,"config.json"),"r").read())
 except:exit(print ("Error, Config Found !"))
@@ -243,6 +243,7 @@ def createTunnel(_id,_config):
 
 def main():
 	print (f"* Remote Host : {_CONFIG['server_config']['remote']['host']}")
+	print (f"* Subdomain  : {_CONFIG['subdomain']}")
 	print (f"* Remote Port : {_CONFIG['server_config']['remote']['port']}")
 	print (f"* Number Of Pools : {_CONFIG['server_config']['local']['n_pools']}")
 

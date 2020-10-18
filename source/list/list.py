@@ -1,4 +1,4 @@
-from os import path as pathlib,popen,get_terminal_size
+from os import path as pathlib,environ,get_terminal_size
 from requests import get
 from requests.exceptions import ConnectionError
 from json import loads
@@ -14,18 +14,16 @@ windows    : ⭕
 mac        : ⭕
 """
 
-_USERNAME,_ = popen("whoami").read().split("\n") 
-_PATH = pathlib.join("/home/",_USERNAME,".transferpi")
+_PATH       = pathlib.join(environ['USERPROFILE'],".transferpi")
 _TYPES = ['private','open']
 
 try:_CONFIG = loads(open(pathlib.join(_PATH,"config.json"),"r").read())
 except:exit(print("Config File Not Fouund !"))
 
-
 def main():
     try:        
         response = get(
-            "http://localhost:2121/file/GET_TOKENS",
+            f"http://localhost:{_CONFIG['server_config']['local']['port']}/file/GET_TOKENS",
             headers={
                     "Authentication":_CONFIG['account_keys']['private']
                 }
