@@ -42,7 +42,7 @@ def main(args):
     
     try:
         response = post(
-                "http://localhost:2121/file/new",
+                f"http://localhost:{_CONFIG['server_config']['local']['port']}/file/new",
                 json=_REQUEST,
                 headers={
                     "Authentication":_CONFIG['account_keys']['private']

@@ -59,7 +59,7 @@ class FileManager:
 
     def GET(self,request:request,token:str):
         if token == "GET_TOKENS":
-            if request.host_url.split("//")[1][:-1] == "localhost:2121":
+            if request.host_url.split("//")[1][:-1] == f"localhost:{_CONFIG['server_config']['local']['port']}":
                 return {"tokens":self._CURSOR.tokens.fetchAll()}
             else:
                 return {
@@ -188,7 +188,7 @@ def serve_static(_dir,_file):
 
 @app.route("/",methods=['GET'])
 def index():
-    if request.host_url.split("//")[1][:-1] == "localhost:2121":
+    if request.host_url.split("//")[1][:-1] == f"localhost:{_CONFIG['server_config']['local']['port']}":
         return render_template("index.html")
     else:
         return send_file(pathlib.join(_PATH,"data","home.jpg"))

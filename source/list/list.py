@@ -25,7 +25,7 @@ except:exit(print("Config File Not Fouund !"))
 def main():
     try:        
         response = get(
-            "http://localhost:2121/file/GET_TOKENS",
+            f"http://localhost:{_CONFIG['server_config']['local']['port']}/file/GET_TOKENS",
             headers={
                     "Authentication":_CONFIG['account_keys']['private']
                 }

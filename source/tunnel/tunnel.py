@@ -21,7 +21,7 @@ header_data_types = {
 
 
 _PATH       = pathlib.join(environ['HOME'],".transferpi")
-_LOGGER     = Logger()#out=pathlib.join(_PATH,"logs","tunnel_logs.txt"))
+_LOGGER     = Logger(out=pathlib.join(_PATH,"logs","tunnel_logs.txt"))
 
 try:_CONFIG = loads(open(pathlib.join(_PATH,"config.json"),"r").read())
 except:exit(print ("Error, Config Found !"))
@@ -204,7 +204,7 @@ class Tunnel:
 			self.local.setsockopt(s.SOL_SOCKET, s.SO_REUSEADDR, 1)
 			self.local.settimeout(1)
 			self.local.connect((
-				"0.0.0.0",
+				"localhost",
 				self._config['server_config']['local']['port']
 			))
 		except:
@@ -238,6 +238,7 @@ def createTunnel(_id,_config):
 
 def main():
 	print (f"* Remote Host : {_CONFIG['server_config']['remote']['host']}")
+	print (f"* Subdomain  : {_CONFIG['subdomain']}")
 	print (f"* Remote Port : {_CONFIG['server_config']['remote']['port']}")
 	print (f"* Number Of Pools : {_CONFIG['server_config']['local']['n_pools']}")
 
