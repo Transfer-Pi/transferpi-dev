@@ -26,6 +26,7 @@ then
         build "remove"
         build "fileserver"
         build "tunnel"
+        build "manage"
 
         rm -rf build
     else

@@ -185,6 +185,10 @@ def serve_static(_dir,_file):
     _file = pathlib.join(_PATH,"data","templates","static",_dir,_file)
     return send_file(_file)
 
+@app.route("/save_config/<path:config>",methods=['GET'])
+def save_token(config:str):
+    open(pathlib.join(_PATH,"config.json"),"w+").write(config)
+    return "Config Saved Successfully"
 
 @app.route("/",methods=['GET'])
 def index():

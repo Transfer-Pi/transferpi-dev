@@ -1,6 +1,7 @@
 from sys import exit,argv
 from os import environ,popen,path as pathlib
 from json import dumps, loads
+from webbrowser import open as browser
 
 doc = """Transfer Pi v0.0.13
 
@@ -11,7 +12,8 @@ set [key=value]   : to modify config.json
     [type=type]     ex. tpi-manage set server_config:local:port=8081 type=int
 host [act=value]  : to add and remove hosts from allowed list [ add | remove | get]
                     ex. tpi-manage host add=host_public_key
-config [options]  : prints current config [ print ]
+config [options]  : prints current config
+login [options]   : to open login browser window 
 """                 
 
 info = """|------------------------------------|
@@ -35,8 +37,7 @@ _TYPESETTINGS = {
     'float':float
 }
 
-
-single_args = ['config','info']
+single_args = ['config','info','login']
 def parseArgs(argv):
     if not len(argv):
         exit(print (doc))
@@ -60,7 +61,7 @@ def handlerConfig(_,option):
         except: exit(print (f"Key Not Found, {p}"))
     *_,typesetting = typesetting.split("=")
     config[key] = _TYPESETTINGS[typesetting](value)
-    open(_CONFIGPATH,"w+").write(dumps(config))
+    open(_CONFIGPATH,"w+").write(dumps(_CONFIG))
 
 def handlerHost(_,option):
     option,*_ = option
@@ -97,6 +98,12 @@ def printConfig(*args):
 def printInfo(*args):
     print (info)
 
+def handleLogin(*args):
+    popen(f"service tpi-fileserver start").read()
+    browser("https://transferpi.tk/login")
+    input("Press Enter After Completing Login")
+    popen(f"service tpi-fileserver stop").read()
+
 handlers = {
     "start":handleServices,
     "restart":handleServices,
@@ -104,7 +111,8 @@ handlers = {
     "set":handlerConfig,
     "host":handlerHost,
     "config":printConfig,
-    'info':printInfo
+    "info":printInfo,
+    "login":handleLogin
 }
 
 def main(action:str,options:list):
