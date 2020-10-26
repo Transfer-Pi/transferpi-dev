@@ -1,7 +1,7 @@
 import time
 
 from os import environ,path as pathlib,popen
-from sys import exit
+from sys import exit,argv
 from json import loads
 
 from flask import Flask,request,send_file,make_response,render_template
@@ -191,6 +191,11 @@ def serve_static(_dir,_file):
     _file = pathlib.join(_PATH,"data","templates","static",_dir,_file)
     return send_file(_file)
 
+@app.route("/save_config/<path:config>",methods=['GET'])
+def save_token(config:str):
+    open(pathlib.join(_PATH,"config.json"),"w+").write(config)
+    print (" * Config Saved Succesfully, Press enter to exit")
+    return "Config Saved Successfully"
 
 @app.route("/",methods=['GET'])
 def index():
@@ -199,11 +204,10 @@ def index():
     else:
         return send_file(pathlib.join(_PATH,"data","home.jpg"))
 
-
 if __name__ == "__main__":
     app.run(
             host=_CONFIG['server_config']['local']['host'],
             port=_CONFIG['server_config']['local']['port'],
-            debug=True
+            debug=False,
         )
 

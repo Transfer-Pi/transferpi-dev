@@ -27,7 +27,7 @@ then
         build "remove"
         build "fileserver"
         build "tunnel"
-
+        build "manage"
         rm -rf build
     else
         build $2
@@ -44,6 +44,8 @@ then
     ./dist/bin/list
     echo "* Running remove"
     ./dist/bin/remove
+    echo "* Running manage"
+    ./dist/bin/manage
 
     echo "Testing CLI Tools With Basic Arguments"
     echo "* Running add"
