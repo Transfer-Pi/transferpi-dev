@@ -26,9 +26,6 @@ info = """|------------------------------------|
 
 _PATH       = pathlib.join(environ['HOME'],".transferpi")
 _CONFIGPATH = pathlib.join(_PATH,"config.json")
-try:_CONFIG = loads(open(_CONFIGPATH,"r").read())
-except:exit(print("Error, Config File Not Found"))
-
 _TYPESETTINGS = {
     'dict':dict,
     'list':list,
@@ -51,33 +48,41 @@ def handleServices(action:str,services:list):
     for service in services:
         popen(f"service tpi-{service} {action}").read();
 
+
+def loadConfig():
+    config = dict()
+    try:config = loads(open(_CONFIGPATH,"r").read())
+    except:exit(print("Error, Config File Not Found"))
+    return config
+
 def handlerConfig(_,option):
+    config = loadConfig()
     option,typesetting,*_ = option
     path,value = option.split("=")
     *path,key = path.split(":")
-    config  = _CONFIG
+    _config = config
     for p in path:
-        try: config = config[p]
+        try: _config = _config[p]
         except: exit(print (f"Key Not Found, {p}"))
     *_,typesetting = typesetting.split("=")
-    config[key] = _TYPESETTINGS[typesetting](value)
-    open(_CONFIGPATH,"w+").write(dumps(_CONFIG))
+    _config[key] = _TYPESETTINGS[typesetting](value)
+    open(_CONFIGPATH,"w+").write(dumps(config))
 
 def handlerHost(_,option):
     option,*_ = option
     action,*key = option.split("=")
-    
+    config = loadConfig()
     if action == 'get':
         print ("* Allowed Hosts")
-        for host in _CONFIG['allowed_hosts']:print(f"|__ {host}")
+        for host in config['allowed_hosts']:print(f"|__ {host}")
     elif action == 'add':
-        _CONFIG['allowed_hosts'] += key
-        _CONFIG['allowed_hosts'] = list(set(_CONFIG['allowed_hosts']))
-        open(_CONFIGPATH,"w+").write(dumps(_CONFIG))
+        config['allowed_hosts'] += key
+        config['allowed_hosts'] = list(set(config['allowed_hosts']))
+        open(_CONFIGPATH,"w+").write(dumps(config))
     elif action == 'remove':
         try:
-            _CONFIG['allowed_hosts'].remove(*key)
-            open(_CONFIGPATH,"w+").write(dumps(_CONFIG))
+            config['allowed_hosts'].remove(*key)
+            open(_CONFIGPATH,"w+").write(dumps(config))
         except:
             pass
 
@@ -91,18 +96,25 @@ def _printConfig(config:dict,level:int):
             print (f"{' '*level*4}{key} : {value}")
 
 def printConfig(*args):
+    config = loadConfig()
     print ("{")
-    _printConfig(_CONFIG,1)
+    _printConfig(config,1)
     print ("}")
+
 
 def printInfo(*args):
     print (info)
 
 def handleLogin(*args):
+    try:
+        open(_CONFIGPATH,"r").read()
+    except:
+        open(_CONFIGPATH,"w+").write(r'{"server_config":{"local":{"port":2121,"host":"localhost"}}}')
     popen(f"service tpi-fileserver start").read()
     browser("https://transferpi.tk/login")
-    input("Press Enter After Completing Login")
+    input("* Press Enter After Completing Login")
     popen(f"service tpi-fileserver stop").read()
+    print ("* Config Saved Succesfully")
 
 handlers = {
     "start":handleServices,
