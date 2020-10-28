@@ -46,8 +46,7 @@ def parseArgs(argv):
 
 def handleServices(action:str,services:list):
     for service in services:
-        popen(f"service tpi-{service} {action}").read();
-
+        popen(f"sudo systemctl {action} tpi-{service}").read();
 
 def loadConfig():
     config = dict()
@@ -110,10 +109,10 @@ def handleLogin(*args):
         open(_CONFIGPATH,"r").read()
     except:
         open(_CONFIGPATH,"w+").write(r'{"server_config":{"local":{"port":2121,"host":"localhost"}}}')
-    popen(f"service tpi-fileserver start").read()
+    popen(f"sudo systemctl start tpi-fileserver").read()
     browser("https://transferpi.tk/login")
     input("* Press Enter After Completing Login")
-    popen(f"service tpi-fileserver stop").read()
+    popen(f"sudo systemctl stop tpi-fileserver").read()
     print ("* Config Saved Succesfully")
 
 handlers = {
