@@ -3,6 +3,7 @@ from datetime import datetime
 from json import loads,dumps
 from socket import error as _error
 from threading import Thread
+from concurrent.futures import ThreadPoolExecutor
 from sys import exit
 from time import sleep
 from os import environ,path as pathlib
@@ -10,7 +11,6 @@ from logger import Logger
 
 import socket as s
 import sys
-
 
 ### Halper
 
@@ -21,7 +21,7 @@ header_data_types = {
 
 
 _PATH       = pathlib.join(environ['HOME'],".transferpi")
-_LOGGER     = Logger(out=pathlib.join(_PATH,"logs","tunnel_logs.txt"))
+_LOGGER     = Logger()#out=pathlib.join(_PATH,"logs","tunnel_logs.txt"))
 
 try:_CONFIG = loads(open(pathlib.join(_PATH,"config.json"),"r").read())
 except:exit(print ("Error, Config Found !"))
@@ -148,25 +148,11 @@ class ParseHeader:
 	def __repr__(self):
 		return self.string
 
-class JSON:
-    def __init__(self,data):
-        self._data = data
-        for i in data:
-            if type(data[i]) == dict:
-                self.__dict__[i] = JSON(data[i])
-            else:
-                self.__dict__[i] = data[i]
-
-    def __str__(self):
-        return self._data.__str__()
-
-    def __repr__(self):
-        return self._data.__repr__()
-
 class Tunnel:
-	def __init__(self,_id,config):
+	def __init__(self,_id,config,session):
 		self._id = _id
-		self._config = config 
+		self._config = config
+		self._session = session 
 		self._createRemoteTunnel()
 
 	def _createRemoteTunnel(self,recon=0):
@@ -183,20 +169,26 @@ class Tunnel:
 			header.status = "CREATE /tunnel HTTP/1.1"
 			header.host = "create.tunnel"
 			header.content_type = "application/json"
-			header.data = dumps({"username":self._config['subdomain'],"id":self._id})
+			header.data = dumps({
+				"username":self._config['subdomain'],
+				"id":self._id,
+				"session":self._session['_id']
+			})
 			header.content_length = len(header.data)
 			self.tunnel.sendall(str(header).encode())
 
 			header = ParseHeader(readHeader(self.tunnel,)[0])
 			self.session = loads(str(readStreamWithoutContentSize(self.tunnel),encoding="utf-8"))
-			_LOGGER.success(f"Tunnel Connected With Id {self._id}")
+			if self.session['status']:
+				_LOGGER.success(f"Tunnel Connected With Id {self._id}")
+			else:
+				_LOGGER.error(self.session['message'])
 
 		except:
+			sleep(1)
 			_LOGGER.error(f'Error Connectiong To Host Retrying ...')
 			self.tunnel.close()
-			sleep(1)
 			self._createRemoteTunnel(recon=recon+1)
-
 
 	def _createLocalTunnel(self,):
 		try:
@@ -208,9 +200,9 @@ class Tunnel:
 				self._config['server_config']['local']['port']
 			))
 		except:
+			sleep(1)
 			_LOGGER.error('Error Connecting Fileserver Retrying...')
 			self.local.close()
-			sleep(1)
 			self._createLocalTunnel()
 
 	def forward(self,):
@@ -227,14 +219,36 @@ class Tunnel:
 		return 1
 
 
-def createTunnel(_id,_config):
-	tunnel = Tunnel(_id,_config)
+def createTunnel(kwargs):
+	tunnel = Tunnel(**kwargs)
 	while True:
 		try:
 			tunnel.forward()
 		except KeyboardInterrupt:
-			exit(0)
-	exit(0)
+			return "Thread Completed"
+	return "Thread Completed"
+
+def init():
+	header = Header()
+	header.status = "INIT /tunnel HTTP/1.1"
+	header.host = "create.tunnel"
+	header.content_type = "application/json"
+	header.data = dumps({"username":_CONFIG['subdomain'],"key":_CONFIG['account_keys']['private']})
+	header.content_length = len(header.data)
+
+	tunnel =  s.socket(s.AF_INET, s.SOCK_STREAM)
+	tunnel.setsockopt(s.SOL_SOCKET, s.SO_REUSEADDR, 1)
+	tunnel.settimeout(None)
+	tunnel.connect((
+		_CONFIG['server_config']['remote']['host'], 
+		_CONFIG['server_config']['remote']['port']
+	))
+
+	tunnel.sendall(str(header).encode())
+	header = ParseHeader(readHeader(tunnel,)[0])
+	session = loads(str(readStreamWithoutContentSize(tunnel),encoding="utf-8"))
+
+	return session
 
 def main():
 	print (f"* Remote Host : {_CONFIG['server_config']['remote']['host']}")
@@ -242,12 +256,15 @@ def main():
 	print (f"* Remote Port : {_CONFIG['server_config']['remote']['port']}")
 	print (f"* Number Of Pools : {_CONFIG['server_config']['local']['n_pools']}")
 
-	pools = []
-	for i in range(_CONFIG['server_config']['local']['n_pools']):
-		pool = Thread(target=createTunnel,kwargs={"_id":i,"_config":_CONFIG})
-		pool.start()
-		pools.append(pool)
-	[pool.join() for pool in pools]
+	session = init()
+	if session['status']:
+		with ThreadPoolExecutor(max_workers=_CONFIG['server_config']['local']['n_pools']) as executer:
+			thread_config = [{"_id":i,"config":_CONFIG,"session":session['session']} for i in range(_CONFIG['server_config']['local']['n_pools'])]
+			res = executer.map(createTunnel,thread_config)
+			for i in res:
+				print (i)
+	else:
+		exit(print (session['message']))
 	
 
 if __name__ == "__main__":
