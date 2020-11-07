@@ -1,4 +1,4 @@
-from os import path as pathlib,popen
+from os import path as pathlib, popen
 from argparse import ArgumentParser
 from requests import delete
 from requests.exceptions import ConnectionError
@@ -7,7 +7,7 @@ from sys import exit
 
 
 parser = ArgumentParser()
-parser.add_argument("token",help="Token",type=str)
+parser.add_argument("token", help="Token", type=str)
 
 """
 App Config
@@ -17,11 +17,13 @@ windows    : ⭕
 mac        : ⭕
 """
 
-_USERNAME,_ = popen("whoami").read().split("\n") 
-_PATH       = pathlib.join("/home/",_USERNAME,".transferpi")
+_USERNAME, _ = popen("whoami").read().split("\n")
+_PATH = pathlib.join("/home/", _USERNAME, ".transferpi")
 
-try: _CONFIG = loads(open(pathlib.join(_PATH,"config.json"),"r").read())
-except: exit(print("Config File Not Fouund !"))
+try:
+    _CONFIG = loads(open(pathlib.join(_PATH, "config.json"), "r").read())
+except:
+    exit(print("Config File Not Fouund !"))
 
 
 def main(args):
@@ -29,11 +31,12 @@ def main(args):
     try:
         response = delete(
             url=url,
-            headers={"Authentication":_CONFIG['account_keys']['private']}
+            headers={"Authentication": _CONFIG['account_keys']['private']}
         )
     except ConnectionError:
-        exit(print ("Error, Fileserver Not Running"))
-    print (response.json()['message'])
+        exit(print("Error, Fileserver Not Running"))
+    print(response.json()['message'])
+
 
 if __name__ == "__main__":
     main(parser.parse_args())
