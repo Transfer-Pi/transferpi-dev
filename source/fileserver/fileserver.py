@@ -5,6 +5,7 @@ from sys import exit, argv
 from json import loads
 
 from flask import Flask, request, send_file, make_response, render_template
+from flask.logging import default_handler
 from flask_cors import CORS
 
 from random import choice
@@ -14,6 +15,8 @@ from requests import post
 
 import jsondb
 import logger
+import logging
+
 
 """
 App Config
@@ -25,6 +28,7 @@ mac        : ⭕
 
 _PATH = pathlib.join(environ['USERPROFILE'], ".transferpi")
 _LOGGER = logger.Logger(out=pathlib.join(_PATH, "logs", "server_logs.txt"))
+_DEBUG = "debug" in argv
 
 try:
     _CONFIG = loads(open(pathlib.join(_PATH, "config.json"), "r").read())
@@ -33,6 +37,10 @@ except:
 
 app = Flask(__name__, template_folder=pathlib.join(_PATH, "data", "templates"))
 CORS(app=app)
+
+log = logging.getLogger('werkzeug')
+log.disabled = not _DEBUG
+
 
 CONN = jsondb.Cursor(path=pathlib.join(_PATH, "data"), logger=_LOGGER)
 CONN.createDB("TPI")
@@ -84,7 +92,7 @@ class FileManager:
                         "message": "Autherization Error",
                         "status": False
                     }, 401
-                if request.headers['Authentication'] not in _CONFIG['sharing']['private']['allowed_hosts']:
+                if request.headers['Authentication'] not in _CONFIG['allowed_hosts']:
                     return {
                         "message": "Not Allowed",
                         "status": False
@@ -139,10 +147,8 @@ class FileManager:
         data['filename'] = data['file'].split("\\")[-1]
         data['token'] = token
         data['time'] = dt.now().strftime("%Y-%m-%d %X")
-        _, data['md5'], * \
-            _ = popen(
-                f"CertUtil -hashfile {data['file']} MD5").read().split("\n")
-        data['url'] = f"https://transferpi.tk/token/{token}"
+        _, data['md5'],*_ = popen( f"CertUtil -hashfile {data['file']} MD5").read().split("\n")
+        data['url'] = f"https://transferpi.tk/{token}"
         self._CURSOR.tokens.insertOne(jsondb.Record(**data))
         self._CURSOR.files.insertOne(jsondb.Record(
             token=token,
@@ -219,5 +225,5 @@ if __name__ == "__main__":
     app.run(
         host=_CONFIG['server_config']['local']['host'],
         port=_CONFIG['server_config']['local']['port'],
-        debug=False,
+        debug=_DEBUG,
     )

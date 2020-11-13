@@ -1,7 +1,7 @@
 # build script for transferpi
 
 build (){
-    pyinstaller source/$1/$1.py
+    pyinstaller source/$1/$1.py $2
     cp dist/$1/* dist/bin/  -r
     rm -rf dist/$1
     rm $1.spec
@@ -21,13 +21,13 @@ then
     if [[ $# == 1 ]]
     then 
         rm -rf dist/bin/*
+        build "manage" "--icon=dist/data/logo.ico"
         build "add"
         build "get"
         build "list"
         build "remove"
         build "fileserver"
         build "tunnel"
-        build "manage"
         rm -rf build
     else
         build $2

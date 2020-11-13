@@ -1,9 +1,10 @@
 from sys import exit, argv
-from os import environ, popen, path as pathlib
+from os import environ, popen, path as pathlib,kill
 from json import dumps, loads
 from webbrowser import open as browser
 
 from tkinter import Tk, Label, Button
+from tkinter import PhotoImage
 from subprocess import Popen, PIPE, call
 
 doc = """Transfer Pi v0.0.13
@@ -27,7 +28,6 @@ info = """|------------------------------------|
 
 _PATH = pathlib.join(environ['USERPROFILE'], ".transferpi")
 _CONFIGPATH = pathlib.join(_PATH, "config.json")
-
 
 class Manager:
     _running_fs = False
@@ -68,7 +68,7 @@ class Manager:
             self.btn_fs_service['text'] = 'start'
             self.status_fs['text'] = 'not running'
         else:
-            self.proc_fs = Popen(['tpi-fileserver'],
+            self.proc_fs = Popen(['tpi-fileserver','>',pathlib.join(_PATH,"logs\\server_out.temp")],
                                  stdout=PIPE, stdin=PIPE, shell=True)
             self.btn_fs_service['text'] = 'stop'
             self.status_fs['text'] = 'running'
@@ -81,7 +81,7 @@ class Manager:
             self.status_tn['text'] = 'not running'
         else:
             self.proc_tn = Popen(
-                ['tpi-tunnel'], stdout=PIPE, stdin=PIPE, shell=True)
+                ['tpi-tunnel','>',pathlib.join(_PATH,"logs\\tunnel_out.temp")], stdout=PIPE, stdin=PIPE, shell=True)
             self.btn_tn_service['text'] = 'stop'
             self.status_tn['text'] = 'running'
         self._running_tn = ~ self._running_tn
@@ -104,7 +104,6 @@ _TYPESETTINGS = {
 
 single_args = ['config', 'info', 'login', 'manage']
 
-
 def parseArgs(argv):
     if not len(argv):
         exit(print(doc))
@@ -114,7 +113,6 @@ def parseArgs(argv):
             exit(print(f"Please Provide Options For {action}"))
         return action, options
 
-
 def loadConfig():
     config = dict()
     try:
@@ -122,7 +120,6 @@ def loadConfig():
     except:
         exit(print("Error, Config File Not Found"))
     return config
-
 
 def handlerConfig(_, option):
     config = loadConfig()
@@ -138,7 +135,6 @@ def handlerConfig(_, option):
     *_, typesetting = typesetting.split("=")
     _config[key] = _TYPESETTINGS[typesetting](value)
     open(_CONFIGPATH, "w+").write(dumps(config))
-
 
 def handlerHost(_, option):
     option, *_ = option
@@ -187,23 +183,33 @@ def handleLogin(*args):
     except:
         open(_CONFIGPATH,
              "w+").write(r'{"server_config":{"local":{"port":2121,"host":"localhost"}}}')
-
     proc_fs = Popen(['tpi-fileserver'], stdout=PIPE, stdin=PIPE)
     browser("https://transferpi.tk/login")
     input(" * Press Enter After Completing Login \n * Starting Listener\n")
     call(['taskkill', '/F', '/T', '/PID',  str(proc_fs.pid)],
          stdout=PIPE, stdin=PIPE)
-
     print(" * Config Saved Succesfully")
 
 
 def runManager(*args):
     root = Tk()
     root.title("Transfer Pi")
+    icon = PhotoImage(file=pathlib.join(_PATH,"data\\logo.png"))
+    root.iconphoto(False,icon)
     manager = Manager(root)
     root.protocol("WM_DELETE_WINDOW", manager.on_closing)
     root.mainloop()
 
+def handleService(action:str,option:list):
+    exit()
+    (option,) = option
+    if action == 'start':
+        proc = Popen(['tpi-fileserver','>',pathlib.join(_PATH,"logs","service_fileserver")],shell=True)
+        open("./pid.txt","w+").write(str(proc.pid))
+        exit()
+    elif action == 'stop':
+        pid = int(open("./pid.txt","r").read())
+        exit()
 
 handlers = {
     "manage": runManager,
@@ -211,7 +217,10 @@ handlers = {
     "host": handlerHost,
     "config": printConfig,
     "info": printInfo,
-    "login": handleLogin
+    "login": handleLogin,
+    "start":handleService,
+    "stop":handleService,
+    "restart":handleService,
 }
 
 
