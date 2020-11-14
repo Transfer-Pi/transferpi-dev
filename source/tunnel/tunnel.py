@@ -297,7 +297,8 @@ def main():
         f"* Number Of Pools : {_CONFIG['server_config']['local']['n_pools']}")
 
     print("* Authenticating Account")
-    session = init()
+    try:session = init()
+    except ConnectionRefusedError: exit(print("* Connection Refused"))
     if session['status']:
         print("* Authentication Successful")
         with ThreadPoolExecutor(max_workers=_CONFIG['server_config']['local']['n_pools']) as executer:
@@ -308,7 +309,6 @@ def main():
                 print(i)
     else:
         exit(_LOGGER.error(session['message']))
-
 
 if __name__ == "__main__":
     main()

@@ -28,6 +28,7 @@ mac        : ⭕
 
 _PATH = pathlib.join(environ['USERPROFILE'], ".transferpi")
 _URL = None
+_MB = 1024*1024
 
 try:
     _CONFIG = loads(open(pathlib.join(_PATH, "config.json"), "r").read())
@@ -55,11 +56,11 @@ def main(args):
     )
 
     if response.status_code == 200:
-        print(f"[*] Starting Donwnload : {response.headers['Filename']}")
+        print(f"* Starting Donwnload : {response.headers['Filename']}")
         content_length = int(response.headers['Content-Length'])
         downloaded = 0
         bar_size = 50
-        step_size = content_length // bar_size  # Fix bar rendering for smaller objects
+        step_size = content_length // bar_size if _CONFIG['server_config']['local']['chunk_size'] < content_length else content_length # Fix bar rendering for smaller objects
         start_time = time()
         _file = pathlib.abspath(response.headers['Filename'])
         with open(_file, 'wb') as file:
@@ -67,32 +68,33 @@ def main(args):
                 file.write(chunk)
                 downloaded += _CONFIG['server_config']['local']['chunk_size']
                 width = (downloaded // step_size) - 1
-                bar = "[*] |"+"▉"*width + " " * (bar_size - width) + '| '
+                bar = "* |"+"#"*width + " " * (bar_size - width) + '| '
                 stdout.write(u"\u001b[1000D" + bar)
                 stdout.flush()
 
-        stdout.write(u"\u001b[1000D" + "[*] |" + "▉" * bar_size + '|\t')
+        stdout.write(u"\u001b[1000D" + "* |" + "#" * bar_size + '| \t')
         stdout.flush()
         stdout.write("\n")
-
-        print(
-            f"[*] Fetched {content_length//(1024*1024)} Mbs in {str(time()-start_time)[:8]} Seconds")
-        print(f'[*] Cheking MD5')
+        downloaded = f'{content_length//(_MB)} Mbs' if content_length > _MB else f'{content_length/1024} Kbs'
+        print(f"* Fetched {downloaded} in {str(time()-start_time)[:8]} Seconds")
+        print(f'* Cheking MD5')
 
         _, md5, *_ = popen(f"CertUtil -hashfile {_file} MD5").read().split("\n")
         if md5 == response.headers['Md5'] == md5:
-            print("[*] Check Successful.")
+            print("* Check Successful.")
             print(
-                f"[*] Downloaded {response.headers['Filename']} Successfully.")
+                f"* Downloaded {response.headers['Filename']} Successfully.")
         else:
-            print("[*] Check Failed.")
-            print(f'[*] Downloaded {downloaded/(1024*1024)} Mb')
+            print("* Check Failed.")
+            print(f'* Downloaded {downloaded/(1024*1024)} Mb')
             main(args)
     elif response.status_code == 521:
         print("Server Down For Maintainence, Please Wait.")
     else:
         print(response.json()['message'])
 
+    if "Message" in response.headers:
+        print (f"* {response.headers['Message']}")
 
 if __name__ == "__main__":
     args = parser.parse_args()
