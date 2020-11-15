@@ -60,7 +60,9 @@ def main(args):
         content_length = int(response.headers['Content-Length'])
         downloaded = 0
         bar_size = 50
-        step_size = content_length // bar_size if _CONFIG['server_config']['local']['chunk_size'] < content_length else content_length # Fix bar rendering for smaller objects
+        # Fix bar rendering for smaller objects
+        step_size = content_length // bar_size if _CONFIG['server_config'][
+            'local']['chunk_size'] < content_length else content_length
         start_time = time()
         _file = pathlib.abspath(response.headers['Filename'])
         with open(_file, 'wb') as file:
@@ -76,10 +78,12 @@ def main(args):
         stdout.flush()
         stdout.write("\n")
         downloaded = f'{content_length//(_MB)} Mbs' if content_length > _MB else f'{content_length/1024} Kbs'
-        print(f"* Fetched {downloaded} in {str(time()-start_time)[:8]} Seconds")
+        print(
+            f"* Fetched {downloaded} in {str(time()-start_time)[:8]} Seconds")
         print(f'* Cheking MD5')
 
-        _, md5, *_ = popen(f"CertUtil -hashfile {_file} MD5").read().split("\n")
+        _, md5, * \
+            _ = popen(f"CertUtil -hashfile {_file} MD5").read().split("\n")
         if md5 == response.headers['Md5'] == md5:
             print("* Check Successful.")
             print(
@@ -94,7 +98,8 @@ def main(args):
         print(response.json()['message'])
 
     if "Message" in response.headers:
-        print (f"* {response.headers['Message']}")
+        print(f"* {response.headers['Message']}")
+
 
 if __name__ == "__main__":
     args = parser.parse_args()
