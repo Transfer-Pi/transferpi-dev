@@ -1,6 +1,6 @@
 import time
 
-from os import environ, path as pathlib, popen
+from os import environ, path as pathlib, popen, getpid
 from sys import exit, argv
 from json import loads
 
@@ -222,6 +222,8 @@ def index():
 
 
 if __name__ == "__main__":
+    with open(pathlib.join(_PATH,"logs","fs.pid"),"w+") as PID:
+        PID.write(getpid().__str__())
     app.run(
         host=_CONFIG['server_config']['local']['host'],
         port=_CONFIG['server_config']['local']['port'],

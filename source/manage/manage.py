@@ -205,17 +205,30 @@ def runManager(*args):
     root.protocol("WM_DELETE_WINDOW", manager.on_closing)
     root.mainloop()
 
+service_desc = {
+    "fileserver":{
+        'cmd':'tpi-fileserver',
+        'log':'server_out.temp',
+        'pid':'fs.pid'
+    },
+    "tunnel":{
+        'cmd':'tpi-tunnel',
+        'log':'tunnel_out.temp',
+        'pid':'tn.pid'
+    }
+}
 
 def handleService(action: str, option: list):
-    exit()
     (option,) = option
+    if option not in service_desc:
+        exit(print ("Please provide valid service name"))
+    service = service_desc[option]
     if action == 'start':
-        proc = Popen(['tpi-fileserver', '>', pathlib.join(_PATH,
-                                                          "logs", "service_fileserver")], shell=True)
-        open("./pid.txt", "w+").write(str(proc.pid))
+        Popen([service['cmd'], '>', pathlib.join(_PATH,"logs", service['log'])], shell=True)
         exit()
     elif action == 'stop':
-        pid = int(open("./pid.txt", "r").read())
+        pid = open(pathlib.join(_PATH,"logs",service['pid']), "r").read()
+        call(['taskkill', '/F', '/T', '/PID',  pid])
         exit()
 
 

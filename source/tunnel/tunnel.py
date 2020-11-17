@@ -7,7 +7,7 @@ from source.tunnel import Tunnel
 from source.__imports__ import (
     ThreadPoolExecutor,
     socket as s,
-    pathlib, environ, sys,
+    pathlib, environ, sys,getpid,
     loads, dumps
 )
 """
@@ -69,7 +69,6 @@ def auth():
     tunnel.close()
     return session
 
-
 def main():
     print(
         f"* Remote Host       : { CONFIG['server_config']['remote']['host']}")
@@ -85,7 +84,7 @@ def main():
     try:
         session = auth()
     except ConnectionRefusedError:
-        exit(print("* Connection Refused"))
+        exit(print("* Remote Host Not Running At The Time."))
     if session['status']:
         print("* Authentication Successful")
         with ThreadPoolExecutor(max_workers=CONFIG['server_config']['local']['n_pools']) as executer:
@@ -106,4 +105,6 @@ def main():
 
 
 if __name__ == "__main__":
+    with open(pathlib.join(PATH,"logs","tn.pid"),"w+") as PID:
+        PID.write(getpid().__str__())
     main()

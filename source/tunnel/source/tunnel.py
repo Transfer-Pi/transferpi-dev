@@ -79,3 +79,7 @@ class Tunnel:
         self.tunnel.close()
         self._createRemoteTunnel()
         return 1
+
+class Manager(object):
+    def __init__(self,):
+        pass
