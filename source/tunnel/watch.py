@@ -2,11 +2,11 @@ import watcher
 
 config = {
     "proc":watcher.PROCESS,
-    "trigger":["python","./tunnel.py","debug"],
+    "trigger":["python","./serve.py","debug"],
     "mode":1,
     "path":"./",
     "files":[
-        "main.py"
+        
     ],
 }
 

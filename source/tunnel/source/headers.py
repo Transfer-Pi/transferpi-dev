@@ -39,14 +39,14 @@ class Header:
     def encode_request(self,)->str:
         header = f'{self.method} {self.path} {self.protocol}\r\n' 
         for key,val in self.__dict__.items():
-            if not key.startswith("__") and key not in ['method','path','protocol',] and val:
+            if not key.startswith("__") and key not in ['method','path','protocol'] and val:
                 header += f"{key.replace('_','-').title()}: {val}\r\n"
         return header+"\r\n" + ( self.data if self.data else '')
         
     def encode_response(self)->str:
         header = f'{self.status}\r\n' 
         for key,val in self.__dict__.items():
-            if not key.startswith("__") and val and key not in 'data status':
+            if not key.startswith("__") and val:
                 header += f"{key.replace('_','-').title()}: {val}\r\n"
         return header+"\r\n" + ( self.data if self.data else '')
 
@@ -56,8 +56,11 @@ class Header:
         req,*header = header.split('\r\n')
         self.method,self.path,self.protocol = req.split(" ")
         for line in header:
-            key,val = line.split(': ')
-            self.__dict__[key.lower().replace('-','_')] = val
+            try:
+                key,val = line.split(': ')
+                self.__dict__[key.lower()] = val
+            except:
+                pass
         return self
         
     def parse_response(self,header):
@@ -66,5 +69,5 @@ class Header:
         self.status,*header = header.split('\r\n')
         for line in header:
             key,val = line.split(': ')
-            self.__dict__[key.lower().replace('-','_')] = val
+            self.__dict__[key] = val
         return self
