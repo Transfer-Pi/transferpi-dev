@@ -15,6 +15,8 @@ parser.add_argument(
     "--force", help="setting it true will update existing token", type=bool, default=False)
 parser.add_argument(
     "--local", help="set this true when sharing file locally", type=bool, default=False)
+parser.add_argument(
+    "--fr", help=None, type=bool, default=False)
 
 """
 App Config
@@ -60,7 +62,8 @@ def main(args):
             print(f"[+] {i}{' '*(16-len(i))}: {response[i]}")
     else:
         print(response.text)
-
+    if args.fr:
+            input()
 
 if __name__ == "__main__":
     args = parser.parse_args()
