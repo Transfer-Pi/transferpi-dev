@@ -1,8 +1,10 @@
 import watcher
 
+file = './tunnel.py'
+
 config = {
     "proc":watcher.PROCESS,
-    "trigger":["python","./serve.py","debug"],
+    "trigger":["python",file,"debug"],
     "mode":1,
     "path":"./",
     "files":[

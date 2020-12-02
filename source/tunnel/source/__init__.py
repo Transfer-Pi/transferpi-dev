@@ -1,9 +1,10 @@
+
 import asyncio
 import re
 
 from .utils import HTTP
 from .headers import Header
-
+from .__imports__ import *
 
 class Route(object):
     def __init__(self,callback,):
@@ -12,9 +13,9 @@ class Route(object):
 class Router:
     routes = []
     def __init__(self,):
-        self.url_re = re.compile("<\w+:\w+>")
-        self.var_re = re.compile("\w+")
-        self.path_re = re.compile('/([a-z0-9?=]+)+|(<\w+:\w+>)')
+        self.url_re = re.compile(r"<\w+:\w+>")
+        self.var_re = re.compile(r"\w+")
+        self.path_re = re.compile(r'/([a-z0-9?=]+)+|(<\w+:\w+>)')
         
         self.dtype_re = {
             'string':'[a-zA-Z0-9]+',

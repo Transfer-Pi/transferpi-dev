@@ -4,43 +4,6 @@ from .__imports__ import (
 
 from .headers import Header
 
-class Stream(object):
-    def readStreamWithoutContentSize(self,stream: s.socket, timeout: float = 1) -> str:
-        data = stream.recv(4)
-        stream.settimeout(timeout)
-
-        try:
-            while True:
-                data += stream.recv(4)
-        except s.error:
-            stream.settimeout(None)
-        return data
-
-    def readHeader(self,stream):
-        start = stream.recv(4)
-        while start[-4:] != '\r\n\r\n'.encode():
-            try:
-                start += stream.recv(1)
-            except stream.error as e:
-                print(f"[ERROR] {e}")
-        return str(start[:-4], encoding="utf8"), start
-
-    def pump(self,x: s.socket, y: s.socket, chunk_size: int, timeout: int = 1, _timeout=None) -> bool:
-        """
-        x : read from
-        y : send to
-        """
-        x.settimeout(_timeout)
-        y.send(x.recv(chunk_size))
-        x.settimeout(timeout)
-        try:
-            while (bit := x.recv(chunk_size)):
-                y.send(bit)
-        except s.error:
-            pass
-        x.settimeout(None)
-
-
 class HTTP:
     def text_response(self=None,message:str='')->str:
         header = Header() 
