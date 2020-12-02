@@ -72,7 +72,7 @@ class App(object):
     __router = Router()
     __rnrn = slice(0,-1)
     def __init__(self,):
-        pass
+        self.loop = asyncio.get_event_loop()
 
     def __add_route(self,func):
         self.__router.register(self.__route__,func)
@@ -102,11 +102,12 @@ class App(object):
             print (f'[{header.method}] {header.path}')
 
     def serve(self,host:str='localhost',port:int=8080):
-        print (f"* Started App")
-        print (f"* Host : {host}")
-        print (f"* Port : {port}")
-        print (f"* URL  : http://{host}:{port}")
-
-        self.loop = asyncio.get_event_loop()
+        print (
+            f"* Started App\n"
+            f"* Host : {host}\n"
+            f"* Port : {port}\n"
+            f"* URL  : http://{host}:{port}"
+        )
+        
         self.loop.create_task(asyncio.start_server(self.handle_request,host,port))
         self.loop.run_forever()

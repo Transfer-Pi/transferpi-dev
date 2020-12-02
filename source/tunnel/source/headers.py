@@ -39,14 +39,14 @@ class Header:
     def encode_request(self,)->str:
         header = f'{self.method} {self.path} {self.protocol}\r\n' 
         for key,val in self.__dict__.items():
-            if not key.startswith("__") and key not in ['method','path','protocol'] and val:
+            if not key.startswith("__") and key not in ['method','path','protocol','data'] and val:
                 header += f"{key.replace('_','-').title()}: {val}\r\n"
         return header+"\r\n" + ( self.data if self.data else '')
         
     def encode_response(self)->str:
         header = f'{self.status}\r\n' 
         for key,val in self.__dict__.items():
-            if not key.startswith("__") and val:
+            if not key.startswith("__") and val and key != 'data':
                 header += f"{key.replace('_','-').title()}: {val}\r\n"
         return header+"\r\n" + ( self.data if self.data else '')
 
