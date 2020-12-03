@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
+import time
+
 from source import App
 from source.tunnel import Manager
 from source.utils import HTTP
 
 from source.__imports__ import (
-    ThreadPoolExecutor,asyncio,
+    Thread,asyncio,
     pathlib,environ,
     loads,dumps
 )
@@ -30,20 +32,25 @@ try:
 except:
     print ("Config not found !")
 
+
 app = App()
 http = HTTP()
-
 tunnel_manager = Manager(config=CONFIG)
+
 asyncio.run(tunnel_manager.init())
 
 @app.route("/")
 def index(request):
-    return http.text_response('Hello, World !')
+    return http.text_response('Fileserver Running !')
 
 def serve(app:App):
     app.serve()
 
-with ThreadPoolExecutor(max_workers=2) as executer:
-    apps = [app,tunnel_manager]
-    for res in executer.map(serve,apps):
-        pass
+app_thread = Thread(target=app.serve,)
+tun_thread = Thread(target=tunnel_manager.serve,)
+
+tun_thread.start()
+app_thread.start()
+
+tun_thread.join()
+app_thread.join()
