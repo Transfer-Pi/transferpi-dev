@@ -17,10 +17,10 @@ class Tunnel:
         self.loop = loop
         self.i = i
 
-    async def open_tunnel(self,):
+    async def open_tunnel(self,handle):
         self.reader,self.writer = await asyncio.open_connection(
-            host="localhost",#self.config['host'],
-            port=8081#self.config['port'],
+            host=self.config['server_config']['remote']['host'],
+            port=self.config['server_config']['remote']['port'],
         )
         header = Header()
         header.method = "CREATE"
@@ -30,35 +30,24 @@ class Tunnel:
         header.content_type = "application/json"
         header.data = dumps({
             "i":self.i
-            # "username": self._config['subdomain'],
-            # "id": self._id,
-            # "session": self._session['key']
         })
         header.content_length = len(header.data)
         self.writer.write(header.encode_request().encode())
-        
-        try:
-            header = await self.reader.readexactly(1)
-        except asyncio.IncompleteReadError:
-            pass
-        except ConnectionError:
-            return 0
-        except OSError:
-            return 0
-        else:
-            header += await self.reader.readuntil(separator=b'\r\n\r\n')
-            header = Header().parse_request(str(header[self.__rnrn],encoding='utf-8'))
-            return 0
+        await handle(
+            self.reader,
+            self.writer
+        )
 
-    def run(self,):
+    async def run(self,par):
         while True:
-            asyncio.run(self.open_tunnel())
-
+            await self.open_tunnel(par.handle)
+            print (f"[REDR] {self.i}")
     
 class Manager:
     __rnrn = slice(0,-4)
-    def __init__(self,config:dict):
+    def __init__(self,config:dict,handle):
         self.config = config
+        self.handle = handle
         self.loop = asyncio.get_event_loop()
 
     async def init(self,):
@@ -78,8 +67,8 @@ class Manager:
         req = header.encode_request().encode()
 
         r,w = await asyncio.open_connection(
-            host='localhost',#self.config['server_config']['remote']['host'],
-            port=8081#self.config['server_config']['remote']['port'],
+            host=self.config['server_config']['remote']['host'],
+            port=self.config['server_config']['remote']['port'],
         )
 
         w.write(req)
@@ -93,6 +82,7 @@ class Manager:
     def serve(
             self,
         ):
+        print ("* Starting Tunnel")
         tunnels = [
             (
                 Tunnel,
@@ -100,7 +90,7 @@ class Manager:
                     "i":i,
                     "config":self.config,
                     "session":self.session,
-                    "loop":self.loop
+                    "loop":self.loop,
                 }
             )
             for 
@@ -111,7 +101,7 @@ class Manager:
         
         def run_thread(arg):
             tunnel,kwargs = arg
-            tunnel(**kwargs).run()
+            asyncio.run(tunnel(**kwargs).run(self))
 
         with ThreadPoolExecutor(max_workers=8) as executer:
             executer.map(

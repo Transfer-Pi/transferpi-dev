@@ -97,8 +97,8 @@ class App(object):
                 response = HTTP.http_response(self,f'{header.path} not found !','Not Found !',404)
 
             writer.write( response )
-            writer.close()
-            
+            await writer.drain()
+            writer.close()   
             print (f'[{header.method}] {header.path}')
 
     def serve(self,host:str='localhost',port:int=8080):
@@ -108,6 +108,5 @@ class App(object):
             f"* Port : {port}\n"
             f"* URL  : http://{host}:{port}"
         )
-        
         self.loop.create_task(asyncio.start_server(self.handle_request,host,port))
         self.loop.run_forever()

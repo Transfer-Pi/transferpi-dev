@@ -35,7 +35,7 @@ except:
 
 app = App()
 http = HTTP()
-tunnel_manager = Manager(config=CONFIG)
+tunnel_manager = Manager(config=CONFIG,handle=app.handle_request)
 
 asyncio.run(tunnel_manager.init())
 
@@ -43,10 +43,19 @@ asyncio.run(tunnel_manager.init())
 def index(request):
     return http.text_response('Fileserver Running !')
 
+@app.route("/app")
+def app_server(self,):
+    return http.json_response({
+        "name":"viraj patel"
+    })
+
 def serve(app:App):
     app.serve()
 
-app_thread = Thread(target=app.serve,)
+app_thread = Thread(target=app.serve,kwargs={
+    "host":CONFIG['server_config']['local']['host'],
+    "port":CONFIG['server_config']['local']['port']
+})
 tun_thread = Thread(target=tunnel_manager.serve,)
 
 tun_thread.start()
