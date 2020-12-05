@@ -29,7 +29,8 @@ class Tunnel:
         header.host = "create.tunnel"
         header.content_type = "application/json"
         header.data = dumps({
-            "i":self.i
+            "i":self.i,
+            "username":self.config['subdomain']
         })
         header.content_length = len(header.data)
         self.writer.write(header.encode_request().encode())

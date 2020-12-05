@@ -67,6 +67,22 @@ class Router:
                 return func,{name:dtype(val) for (name,dtype),(val,_) in zip(var,self.path_re.findall(url)) if name},query
         return False,None,None
         
+class Request(object):
+    header:Header = None
+    writer:asyncio.StreamWriter = None
+    reader:asyncio.StreamReader = None
+    loop = None
+    def __init__(
+            self,
+            header:Header,
+            reader:asyncio.StreamReader,
+            writer:asyncio.StreamWriter,
+            loop,
+        ):
+        self.header = header
+        self.reader = reader
+        self.writer = writer
+        self.loop = loop
 
 class App(object):
     __router = Router()
@@ -92,13 +108,13 @@ class App(object):
 
             func,var,query = self.__router.get(header.path)
             if func:
-                response = func(header,**var)
+                response = func(Request(header,reader,writer,self.loop),**var)
             else:
                 response = HTTP.http_response(self,f'{header.path} not found !','Not Found !',404)
-
-            writer.write( response )
-            await writer.drain()
-            writer.close()   
+            if response:
+                writer.write( response )
+                await writer.drain()
+                writer.close()   
             print (f'[{header.method}] {header.path}')
 
     def serve(self,host:str='localhost',port:int=8080):
