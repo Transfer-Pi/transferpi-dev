@@ -2,12 +2,12 @@
 
 import time
 
-from source import App,Request
-from source.tunnel import Manager
-from source.utils import HTTP,mime_type,send_file
-from source.headers import Header
+from lib.web import App,Request
+from lib.tunnel import Manager
+from lib.headers import Header
+from lib.utils import text_response, json_response, send_file
 
-from source.__imports__ import (
+from lib.__imports__ import (
     Thread,asyncio,
     pathlib,environ,stat,
     loads,dumps
@@ -33,33 +33,24 @@ try:
 except:
     print ("Config not found !")
 
-
 app = App()
-http = HTTP()
-tunnel_manager = Manager(config=CONFIG,handle=app.handle_request)
-
-file_path = "E:\Downloads\[AnimeRG] Bleach (Complete Series) EP 001-366 [480p] [Dual-Audio] [Batch] [x265] [10-bit] [pseudo]\Season 15 (Gotei 13 Invading Army)\[AnimeRG] Bleach - 321 - Showdown of Mutual Self, Ikkaku vs. Ikkaku! [480p] [x265] [pseudo].mkv"
-
+# tunnel_manager = Manager(config=CONFIG,handle=app.handle_request)
 
 @app.route("/")
 def index(request):
-    return http.text_response('Fileserver Running !')
+    return text_response("Fileserver 1.0.0")
 
 @app.route("/<string:name>/<int:ID>")
 def app_(request:Request,name,ID):
-    return http.json_response({
+    return json_response({
         "name":name,
         "id":ID
     })
 
-@app.route("/file")
-def file_sender(request:Request):
-    return send_file(file_path,request)
-
-try:
-    asyncio.run(tunnel_manager.init())
-except ConnectionError:
-    print ("Could not start tunnel, Remote server is not running")
+# try:
+#     asyncio.run(tunnel_manager.init())
+# except ConnectionError:
+#     print ("Could not start tunnel, Remote server is not running")
 
 app_thread = Thread(target=app.serve,kwargs={
     "host":CONFIG['server_config']['local']['host'],

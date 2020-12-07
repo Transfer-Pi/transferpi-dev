@@ -1,10 +1,10 @@
 
-import asyncio
-import re
-
-from .utils import HTTP
-from .headers import Header
-from .__imports__ import *
+# from .utils import Response
+from .headers import Header,RequestHeader
+from .utils import text_response,json_response
+from .__imports__ import (
+    asyncio,re
+)
 
 class Route(object):
     def __init__(self,callback,):
@@ -104,13 +104,13 @@ class App(object):
             pass
         else:
             header += await reader.readuntil(separator=b'\r\n\r\n')
-            header = Header().parse_request(str(header[self.__rnrn],encoding='utf-8'))
+            header = RequestHeader().parse(str(header[self.__rnrn],encoding='utf-8'))
 
             func,var,query = self.__router.get(header.path)
             if func:
                 response = func(Request(header,reader,writer,self.loop),**var)
             else:
-                response = HTTP.http_response(self,f'{header.path} not found !','Not Found !',404)
+                response = text_response(f'{header.path} not found !',404,'Not Found !')
             if response:
                 writer.write( response )
                 await writer.drain()
