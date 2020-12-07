@@ -83,7 +83,6 @@ class Manager:
     def serve(
             self,
         ):
-        print ("* Starting Tunnel")
         tunnels = [
             (
                 Tunnel,
@@ -108,6 +107,11 @@ class Manager:
             executer.map(
                 run_thread,
                 tunnels
+            )
+            print (f"* Subdomain : {self.config['subdomain']}")
+            print (
+                f"* Subdomain : http://{self.config['subdomain']}"
+                f".{ self.config['server_config']['remote']['host'] }"
             )
         
         

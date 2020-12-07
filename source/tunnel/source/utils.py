@@ -1,8 +1,9 @@
 from .__imports__ import (
-                socket as s,dumps,loads,pathlib
+                socket as s,dumps,loads,pathlib,stat
             )
 
 from .headers import Header
+from .mime_types import raw_text
 
 class HTTP:
     def text_response(self=None,message:str='')->str:
@@ -56,3 +57,30 @@ class HTTP:
         header.keep_alive: "timeout=1, max=999"
         header.content_length = len(header.data)
         return header.encode_response().encode()
+
+def send_file(file:str,request):
+    fname = file.split("\\")[-1]    
+    head = Header()
+    header = Header() 
+    header.status = "HTTP/1.1 200 OK"
+    header.access_control_allow_origin = "*"
+    header.connection = "Keep-Alive"
+    head.content_type = 'application/octet-stream'
+    header.keep_alive: "timeout=1, max=999"
+    header.content_disposition = f'attachment; filename="{fname}"'
+    header.content_length = stat(file).st_size
+    request.writer.write(header.encode_response().encode())
+    
+    with open(file,"rb") as file_stream:
+        while (send_bit:=file_stream.read(512)):
+            request.writer.write(send_bit)
+    request.writer.close()
+    return False
+
+mime_type = dict((
+    row.split("\t")
+        for
+    row
+        in 
+    raw_text.split("\n")
+))
