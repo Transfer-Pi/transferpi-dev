@@ -15,8 +15,9 @@ class RequestHeader(object):
         self.connection = 'keep-alive'
         self.cache_control = 'max-age=0'
         self.dnt = '1'
+        self.content_length = 0
         self.upgrade_insecure_requests = '1'
-        self.user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36'
+        self.user_agent = 'TransferPi/1.0'
         self.accept = '*/*'
         self.accept_encoding = 'gzip, deflate, br'
         self.accept_language = 'en-US,en;q=0.9,hi;q=0.8'
@@ -32,28 +33,33 @@ class RequestHeader(object):
         del self.__dict__[key]  
 
     def __str__(self)->str:
-        return str(self.__encode__(),encoding='utf-8')
+        return str(self.encode(),encoding='utf-8')
+
+    def __truediv__(self,data:str):
+        return self.encode() +  data.encode()
+
+    def __contains__(self,item):
+        return item in self.__dict__
 
     def encode(self,)->str:
-        header = f'{self.method} {self.path} {self.protocol}\r\n' 
+        header = f"{self.method} {self.path} HTTP/1.1\r\n"
         for key,val in self.__dict__.items():
-            if not key.startswith("__") and key not in self.__skip:
-                header += f"{key.replace('_','-').title()}: {val}\r\n"
+            if key not in ['method','path','protocol']:
+                header += f'{key.title().replace("_","-")}: {val}\r\n'
+        header += '\r\n'
         return header.encode()
 
-    def parse(self,header):
-        self.__raw__ = header
-        self.__encode__ = self.encode
-        req,*header = header.split('\r\n')
-        self.method,self.path,self.protocol = req.split(" ")
-        for line in header:
+    def parse(self,header:str):
+        self.status,*header = header.split("\r\n")
+        self.method,self.path,self.protocol = self.status.split(" ")
+        for head in header:
             try:
-                key,val = line.split(': ')
-                self.__dict__[key.lower().replace("-","_")] = val
-            except:
+                key,val = head.split(": ")
+                self[key.lower().replace("-","_")] = val
+            except ValueError:
                 pass
         return self
-
+        
 class ResponseHeader(object):
     """
     Fix dynamic date formating
@@ -65,8 +71,9 @@ class ResponseHeader(object):
         self.content_type = 'text/html; charset=utf-8'
         self.keep_alive = 'timeout=5, max=997'
         self.server = 'TPI1.0'
-        # self.date = 'Mon, 18 Jul 2016 16:06:00 GMT'
-        # self.last_modified = 'Mon, 18 Jul 2016 02:36:04 GMT'
+
+        self.status_code = 200
+        self.message = 'OK'    
 
     def __getitem__(self,key)->str:
         return self.__dict__[key]
@@ -78,25 +85,31 @@ class ResponseHeader(object):
         del self.__dict__[key]  
 
     def __str__(self)->str:
-        return str(self.__encode__(),encoding='utf-8')
+        return str(self.encode(),encoding='utf-8')
 
     def __truediv__(self,data:str):
-        return self.encode() + b'\r\n' + data.encode()
+        return self.encode()  + data.encode()
 
-    def encode(self)->str:
-        header = f'{self.status}\r\n' 
+    def __contains__(self,item):
+        return item in self.__dict__
+
+    def encode(self,):
+        header = f"HTTP/1.1 {self.status_code} {self.message}\r\n"
         for key,val in self.__dict__.items():
-            if not key.startswith("__") and key != 'status':
-                header += f"{key.replace('_','-').title()}: {val}\r\n"
+            if key not in ['status_code','message']:
+                header += f'{key.title().replace("_","-")}: {val}\r\n'
+        header += '\r\n'
         return header.encode()
 
-    def parse(self,header):
-        self.__raw__ = header
-        self.__encode__ = self.encode
-        self.status,*header = header.split('\r\n')
-        for line in header:
-            key,val = line.split(': ')
-            self.__dict__[key] = val
+    def parse(self,header:str):
+        self.status,*header = header.split("\r\n")
+        self.protocol,self.status_code,*self.message = self.status.split(" ")
+        for head in header:
+            try:
+                key,val = head.split(": ")
+                self[key.lower().replace("-","_")] = val
+            except:
+                pass
         return self
 
 class Header:
@@ -131,36 +144,15 @@ class Header:
 
     def encode_request(self,)->str:
         header = f'{self.method} {self.path} {self.protocol}\r\n' 
-        for key,val in self.__dict__.items():
-            if not key.startswith("__") and key not in ['method','path','protocol','data'] and val:
-                header += f"{key.replace('_','-').title()}: {val}\r\n"
-        return header+"\r\n" + ( self.data if self.data else '')
         
     def encode_response(self)->str:
         header = f'{self.status}\r\n' 
-        for key,val in self.__dict__.items():
-            if not key.startswith("__") and val and key != 'data':
-                header += f"{key.replace('_','-').title()}: {val}\r\n"
-        return header+"\r\n" + ( self.data if self.data else '')
+        
 
-    def parse_request(self,header):
-        self.__raw__ = header
+    def parse_request(self,header:str):
         self.__encode__ = self.encode_request
-        req,*header = header.split('\r\n')
-        self.method,self.path,self.protocol = req.split(" ")
-        for line in header:
-            try:
-                key,val = line.split(': ')
-                self.__dict__[key.lower()] = val
-            except:
-                pass
-        return self
+        self.status,*header = header.split('\r\n')
+
         
     def parse_response(self,header):
-        self.__raw__ = header
-        self.__encode__ = self.encode_response
-        self.status,*header = header.split('\r\n')
-        for line in header:
-            key,val = line.split(': ')
-            self.__dict__[key] = val
-        return self
+        pass

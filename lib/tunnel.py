@@ -1,5 +1,5 @@
 from .__imports__ import asyncio,dumps,loads,ThreadPoolExecutor
-from .headers import Header
+from .headers import RequestHeader,ResponseHeader
 
 class Tunnel:
     reader:asyncio.StreamReader = None
@@ -22,18 +22,18 @@ class Tunnel:
             host=self.config['server_config']['remote']['host'],
             port=self.config['server_config']['remote']['port'],
         )
-        header = Header()
+        data = dumps({
+            "i":self.i,
+            "username":self.config['subdomain']
+        })
+        header = RequestHeader()
         header.method = "CREATE"
         header.path = '/tunnel'
         header.protocol = 'TPI/1.1'
         header.host = "create.tunnel"
         header.content_type = "application/json"
-        header.data = dumps({
-            "i":self.i,
-            "username":self.config['subdomain']
-        })
-        header.content_length = len(header.data)
-        self.writer.write(header.encode_request().encode())
+        header.content_length = len(data)
+        self.writer.write(header / data)
         await handle(
             self.reader,
             self.writer
@@ -42,7 +42,6 @@ class Tunnel:
     async def run(self,par):
         while True:
             await self.open_tunnel(par.handle)
-            print (f"[REDR] {self.i}")
     
 class Manager:
     __rnrn = slice(0,-4)
@@ -52,29 +51,27 @@ class Manager:
         self.loop = asyncio.get_event_loop()
 
     async def init(self,):
-        header = Header()
+        data = dumps({
+            "username":  self.config['subdomain'],
+            "key":  self.config['account_keys']['private']
+        })
+
+        header = RequestHeader()
         header.method = "INIT"
         header.path = '/tunnel'
         header.protocol = 'TPI/1.1'
         header.content_type = "application/json"
         header.host = 'tunnel.create'
-        header.data = dumps(
-            {
-                "username":  self.config['subdomain'],
-                "key":  self.config['account_keys']['private']
-            }
-        )
-        header.content_length = len(header.data)
-        req = header.encode_request().encode()
+        header.content_length = len(data)
 
         r,w = await asyncio.open_connection(
             host=self.config['server_config']['remote']['host'],
             port=self.config['server_config']['remote']['port'],
         )
 
-        w.write(req)
+        w.write( header / data )
         res_header = (await r.readuntil(b'\r\n\r\n')).decode()[self.__rnrn]
-        res_header = Header().parse_response(res_header)
+        res_header = ResponseHeader().parse(res_header)
 
         self.session = loads((await r.read()).decode())
         await w.drain()
@@ -108,9 +105,9 @@ class Manager:
                 run_thread,
                 tunnels
             )
-            print (f"* Subdomain : {self.config['subdomain']}")
+            # print (f"* Subdomain : {self.config['subdomain']}")
             print (
-                f"* Subdomain : http://{self.config['subdomain']}"
+                f"* Tunnel : http://{self.config['subdomain']}"
                 f".{ self.config['server_config']['remote']['host'] }"
             )
         

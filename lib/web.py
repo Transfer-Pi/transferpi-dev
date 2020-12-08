@@ -3,7 +3,7 @@
 from .headers import Header,RequestHeader
 from .utils import text_response,json_response
 from .__imports__ import (
-    asyncio,re
+    asyncio,re,loads
 )
 
 class Route(object):
@@ -15,17 +15,16 @@ class Router:
     def __init__(self,):
         self.url_re = re.compile(r"<\w+:\w+>")
         self.var_re = re.compile(r"\w+")
-        self.path_re = re.compile(r'/([a-z0-9?=]+)+|(<\w+:\w+>)')
+        self.path_re = re.compile(r'/([a-z0-9?=-_+]+)+|(<\w+:\w+>)')
         
         self.dtype_re = {
-            'string':'[a-zA-Z0-9]+',
+            'string':'[a-zA-Z0-9_-]+',
             'int':'\d+'
         }
         self.dtype_obj = {
             'string':str,
             'int':int
         }
-        
             
     def __setitem__(self,key,value):
         self.routes[key] = value
@@ -84,6 +83,10 @@ class Request(object):
         self.writer = writer
         self.loop = loop
 
+    async def get_json(self,):
+        data = await self.reader.readexactly(n= int(self.header.content_length))
+        return loads(data)
+
 class App(object):
     __router = Router()
     __rnrn = slice(0,-1)
@@ -108,7 +111,7 @@ class App(object):
 
             func,var,query = self.__router.get(header.path)
             if func:
-                response = func(Request(header,reader,writer,self.loop),**var)
+                response = await func(Request(header,reader,writer,self.loop),**var)
             else:
                 response = text_response(f'{header.path} not found !',404,'Not Found !')
             if response:

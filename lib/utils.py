@@ -11,7 +11,8 @@ def text_response(
         message:str='OK'
     )->str:
     response = ResponseHeader()
-    response.status = f'HTTP/1.1 {status_code} {message}'
+    response.status_code = status_code
+    response.message =  message
     response.content_length = len(text)
     response.content_type = 'text/plain; charset=utf-8'
     return response / text
@@ -29,20 +30,21 @@ def json_response(
     return response / data
 
 
-def send_file(file:str,request):
-    fname = file.split("\\")[-1]    
-    head = Header()
-    header = Header() 
-    header.status = "HTTP/1.1 200 OK"
-    header.access_control_allow_origin = "*"
-    header.connection = "Keep-Alive"
+def send_file(file:str,request,headers:dict=dict()):  
+    head = ResponseHeader()
+    head.status_code = 200
+    head.message = 'OK'
+    head.access_control_allow_origin = "*"
+    head.connection = "Keep-Alive"
     head.content_type = 'application/octet-stream'
-    header.keep_alive: "timeout=1, max=999"
-    header.content_disposition = f'attachment; filename="{fname}"'
-    header.content_length = stat(file).st_size
+    head.keep_alive: "timeout=1, max=999"
+    head.content_length = stat(file).st_size
     
+    for key,val in headers.items():
+        head[key.title().replace("_","-")] = val
+
     with open(file,"rb") as file_stream:
-        request.writer.write(header.encode_response().encode())
+        request.writer.write(head.encode())
         while (send_bit:=file_stream.read(512)):
             request.writer.write(send_bit)
     request.writer.close()
