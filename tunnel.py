@@ -165,38 +165,39 @@ class FileManager:
         self.cursor.tokens.insertOne(jsondb.Record(**data))
         return json_response(data)
 
-    def PUT(self, request: Request, *args, **kwargs):
+    async def PUT(self, request: Request, *args, **kwargs):
         return "PUT"
 
-    def DELETE(self, request: Request, token: str, *args, **kwargs):
+    async def DELETE(self, request: Request, token: str, *args, **kwargs):
         if token == "ALL":
             if self.cursor.tokens.deleteAll():
                 if self.cursor.files.deleteAll():
-                    return {
+                    return json_response({
                         "message": "Table Emptied Sucessfully"
-                    }
+                    })
                 else:
-                    return {
+                    return json_response({
                         "message": "Error deleting table : Files"
-                    }
+                    })
             else:
-                return {
+                return json_response({
                     "message": "Error deleting table : Tokens"
-                }
-
+                })
+        
+        
         if (token_rec := self.cursor.tokens.fetchOne(token)):
             try:
                 file_rec = self.cursor.files.fetchOne(
                     md5(token_rec.file.encode()).hexdigest())
                 token_rec.destroy()
                 file_rec.destroy()
-                return {"message": "File Removed From Sharing List"}
+                return json_response({"message": "File Removed From Sharing List"})
             except:
                 token_rec.write()
                 file_rec.write()
-                return {"message": "Cannot Remove File"}
+                return json_response({"message": "Cannot Remove File"})
         else:
-            return {"message": "File Not In Sharing List"}
+            return json_response({"message": "File Not In Sharing List"})
 
 app = App()
 conn = jsondb.Cursor(path=pathlib.join(PATH), logger=LOGGER)
@@ -228,11 +229,10 @@ async def name_id(request:Request,name,idd):
 
 @app.route("/save_config/<string:config>")
 async def save_config(request:Request,config):
-    print ("\n"+config)
     return text_response("Saved")
 
 try:
-    asyncio.run(tunnel_manager.init())
+    pass# asyncio.run(tunnel_manager.init())
 except ConnectionError:
     print ("Could not start tunnel, Remote server is not running")
 
@@ -240,10 +240,10 @@ app_thread = Thread(target=app.serve,kwargs={
     "host":CONFIG['server_config']['local']['host'],
     "port":CONFIG['server_config']['local']['port']
 })
-tun_thread = Thread(target=tunnel_manager.serve,)
+# tun_thread = Thread(target=tunnel_manager.serve,)
 
-tun_thread.start()
+# tun_thread.start()
 app_thread.start()
 
-tun_thread.join()
+# tun_thread.join()
 app_thread.join()
