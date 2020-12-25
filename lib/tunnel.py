@@ -105,7 +105,6 @@ class Manager:
                 run_thread,
                 tunnels
             )
-            # print (f"* Subdomain : {self.config['subdomain']}")
             print (
                 f"* Tunnel : http://{self.config['subdomain']}"
                 f".{ self.config['server_config']['remote']['host'] }"

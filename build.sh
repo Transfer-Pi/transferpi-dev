@@ -1,7 +1,7 @@
 # build script for transferpi
 
 build (){
-    pyinstaller source/$1/$1.py $2
+    pyinstaller $1.py $2
     cp dist/$1/* dist/bin/  -r
     rm -rf dist/$1
     rm $1.spec

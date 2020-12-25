@@ -48,5 +48,12 @@ class HTTPRequest(object):
         await self.__writer.drain()
         return self
 
+    @property 
+    def reader(self,):
+        return self.__reader
+
     def get_json(self,):
         return loads(self.content.decode()) 
+
+    def close(self,):
+        self.__writer.close()

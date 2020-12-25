@@ -12,7 +12,7 @@ linux   : -
 mac os  : -
 """
 
-"""
+helpx = """
 tpi-add filename [options]
 
 filename : Name of file to add in sharing queue
@@ -55,7 +55,7 @@ keys = [
 
 async def main():
     if 'filename' not in args:
-        return 'Please provide filename.'
+        return helpx + '\nPlease provide filename.'
 
     file = pathlib.abspath(args['filename'])
     if not pathlib.isfile(file):

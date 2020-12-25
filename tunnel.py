@@ -86,16 +86,16 @@ class FileManager:
 
         if (rec := self.cursor.tokens.fetchOne(token)):
             if rec.private:
-                if 'Authentication' not in request.header:
+                if 'authentication' not in request.header:
                     return json_response({
                         "message": "Autherization Error",
                         "status": False
                     }, status_code =401)
-                if request.headers['Authentication'] not in self.config['allowed_hosts']:
+                if request.header.authentication not in self.config['allowed_hosts']:
                     return json_response({
                         "message": "Not Allowed",
                         "status": False
-                    },status_code= 405)
+                    },status_code= 405, message='Not Allowed')
 
             if pathlib.isfile(rec.file):
                 headers = {
@@ -133,7 +133,7 @@ class FileManager:
         else:
             token = HTTPRequest(
                 method='post',
-                host='161.35.59.94',
+                host='transferpi.tk',
                 port=80,
                 path='/token/new',
                 json={
@@ -160,8 +160,8 @@ class FileManager:
         data['filename'] = data['file'].split("\\")[-1]
         data['token'] = token
         data['time'] = dt.now().strftime("%Y-%m-%d %X")
-        data['md5'], *_ = popen(f"md5sum {data['file']}").read().split(" ")
-        data['url'] = f"https://transferpi.tk/{token}"
+        _, data['md5'],*_ = popen( f"CertUtil -hashfile {data['file']} MD5").read().split("\n")
+        data['url'] = f"http://transferpi.tk/{token}"
         self.cursor.tokens.insertOne(jsondb.Record(**data))
         return json_response(data)
 
@@ -232,18 +232,19 @@ async def save_config(request:Request,config):
     return text_response("Saved")
 
 try:
-    pass# asyncio.run(tunnel_manager.init())
+    asyncio.run(tunnel_manager.init())
 except ConnectionError:
     print ("Could not start tunnel, Remote server is not running")
 
+tun_thread = Thread(target=tunnel_manager.serve,)
 app_thread = Thread(target=app.serve,kwargs={
     "host":CONFIG['server_config']['local']['host'],
     "port":CONFIG['server_config']['local']['port']
 })
-# tun_thread = Thread(target=tunnel_manager.serve,)
 
-# tun_thread.start()
+
+tun_thread.start()
 app_thread.start()
 
-# tun_thread.join()
+tun_thread.join()
 app_thread.join()

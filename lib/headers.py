@@ -22,6 +22,7 @@ class RequestHeader(object):
         self.accept_encoding = 'gzip, deflate, br'
         self.accept_language = 'en-US,en;q=0.9,hi;q=0.8'
         self.content_type = 'text/plain'
+        self.access_control_allow_origin = "*"
 
     def __getitem__(self,key)->str:
         return self.__dict__[key]
@@ -94,9 +95,9 @@ class ResponseHeader(object):
         return item in self.__dict__
 
     def encode(self,):
-        header = f"HTTP/1.1 {self.status_code} {self.message}\r\n"
+        header = f"HTTP/1.1 {self.status_code} {''.join(self.message)}\r\n"
         for key,val in self.__dict__.items():
-            if key not in ['status_code','message']:
+            if key not in ['status_code','message','status']:
                 header += f'{key.title().replace("_","-")}: {val}\r\n'
         header += '\r\n'
         return header.encode()

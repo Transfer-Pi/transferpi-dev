@@ -71,6 +71,8 @@ class Request(object):
     writer:asyncio.StreamWriter = None
     reader:asyncio.StreamReader = None
     loop = None
+
+    _content = None
     def __init__(
             self,
             header:Header,
@@ -84,8 +86,17 @@ class Request(object):
         self.loop = loop
 
     async def get_json(self,):
-        data = await self.reader.readexactly(n= int(self.header.content_length))
-        return loads(data)
+        if self._content:
+            return loads(self._content)
+        self._content = await self.reader.readexactly(n= int(self.header.content_length))
+        return loads(self._content)
+
+    @property
+    async def content(self,):
+        if self._content:
+            return self._content
+        self._content = await self.reader.readexactly(n= int(self.header.content_length))
+        return self._content
 
 class App(object):
     __router = Router()
@@ -114,6 +125,7 @@ class App(object):
                 response = await func(Request(header,reader,writer,self.loop),**var)
             else:
                 response = text_response(f'{header.path} not found !',404,'Not Found !')
+                
             if response:
                 writer.write( response )
                 await writer.drain()
