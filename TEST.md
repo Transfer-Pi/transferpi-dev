@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-### Transfer π - A P2P file sharing Platform, kinda ...
-=======
 #!/usr/bin/env python3
 
 import time
@@ -253,4 +250,3 @@ tun_thread.join()
 app_thread.join()
 
 print (Hello)
->>>>>>> flaskless-aio

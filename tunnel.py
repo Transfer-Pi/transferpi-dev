@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-### Transfer π - A P2P file sharing Platform, kinda ...
-=======
 #!/usr/bin/env python3
 
 import time
@@ -89,16 +86,16 @@ class FileManager:
 
         if (rec := self.cursor.tokens.fetchOne(token)):
             if rec.private:
-                if 'Authentication' not in request.header:
+                if 'authentication' not in request.header:
                     return json_response({
                         "message": "Autherization Error",
                         "status": False
                     }, status_code =401)
-                if request.headers['Authentication'] not in self.config['allowed_hosts']:
+                if request.header.authentication not in self.config['allowed_hosts']:
                     return json_response({
                         "message": "Not Allowed",
                         "status": False
-                    },status_code= 405)
+                    },status_code= 405, message='Not Allowed')
 
             if pathlib.isfile(rec.file):
                 headers = {
@@ -251,6 +248,3 @@ app_thread.start()
 
 tun_thread.join()
 app_thread.join()
-
-print (Hello)
->>>>>>> flaskless-aio
