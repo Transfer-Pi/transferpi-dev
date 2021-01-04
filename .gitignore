@@ -3,11 +3,7 @@ dist/
 
 source/add/temp/
 source/fileserver/node_modules/*
-<<<<<<< HEAD
-.vscode
-=======
 .vscode
 
 *.ipynb
 .ipynb_checkpoints
->>>>>>> flaskless-aio

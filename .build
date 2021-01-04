@@ -1,6 +1,2 @@
-<<<<<<< HEAD
 [platform] linux
-=======
-[platform] windows
->>>>>>> flaskless-aio
-[version] 0.0.2c
+[version] 1.0.0

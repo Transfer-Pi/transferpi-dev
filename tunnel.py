@@ -17,7 +17,8 @@ from lib.utils import text_response, json_response, send_file
 from lib.__imports__ import (
     Thread,asyncio,
     pathlib,environ,stat,popen,
-    loads,dumps
+    loads,dumps,
+    getpid
 )
 
 """
@@ -33,7 +34,7 @@ header_data_types = {
     "chunk_size": int
 }
 
-PATH   = pathlib.join(environ['USERPROFILE'],'.transferpi')
+PATH = pathlib.join(environ['USERPROFILE'],'.transferpi')
 LOGGER = logger.Logger(out=pathlib.join(PATH, "logs", "server_logs.txt"))
 
 try:
@@ -156,11 +157,12 @@ class FileManager:
             token=token,
             file=md5_sum
         ))
-
+        
         data['filename'] = data['file'].split("\\")[-1]
         data['token'] = token
         data['time'] = dt.now().strftime("%Y-%m-%d %X")
-        _, data['md5'],*_ = popen( f"CertUtil -hashfile {data['file']} MD5").read().split("\n")
+        _, data['md5'],*_ = popen( f"CertUtil -hashfile \"{data['file']}\" MD5").read().split("\n") if data['md5check'] else (None,'NOCHECK',None)
+        del data['md5check']
         data['url'] = f"http://transferpi.tk/{token}"
         self.cursor.tokens.insertOne(jsondb.Record(**data))
         return json_response(data)
@@ -231,20 +233,24 @@ async def name_id(request:Request,name,idd):
 async def save_config(request:Request,config):
     return text_response("Saved")
 
-try:
-    asyncio.run(tunnel_manager.init())
-except ConnectionError:
-    print ("Could not start tunnel, Remote server is not running")
 
-tun_thread = Thread(target=tunnel_manager.serve,)
-app_thread = Thread(target=app.serve,kwargs={
-    "host":CONFIG['server_config']['local']['host'],
-    "port":CONFIG['server_config']['local']['port']
-})
+if __name__ == "__main__":
+    try:
+        asyncio.run(tunnel_manager.init())
+    except ConnectionError:
+        print ("Could not start tunnel, Remote server is not running")
 
+    tun_thread = Thread(target=tunnel_manager.serve,)
+    app_thread = Thread(target=app.serve,kwargs={
+        "host":"0.0.0.0",#CONFIG['server_config']['local']['host'],
+        "port":CONFIG['server_config']['local']['port']
+    })
 
-tun_thread.start()
-app_thread.start()
+    tun_thread.start()
+    app_thread.start()
 
-tun_thread.join()
-app_thread.join()
+    with open(pathlib.join(PATH,'service','tunnel.pid'),"w+") as file:
+        file.write(str(getpid()))
+
+    tun_thread.join()
+    app_thread.join()

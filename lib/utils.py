@@ -44,10 +44,14 @@ def send_file(file:str,request,headers:dict=dict()):
     for key,val in headers.items():
         head[key.title().replace("_","-")] = val
 
+    request.writer.write(head.encode())
     with open(file,"rb") as file_stream:
-        request.writer.write(head.encode())
-        while (send_bit:=file_stream.read(512)):
+        while True:
+            send_bit =file_stream.read(1024)
+            if not send_bit:
+                break
             request.writer.write(send_bit)
+
     request.writer.close()
     return False
 

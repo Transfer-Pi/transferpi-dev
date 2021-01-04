@@ -28,11 +28,7 @@ then
         build "remove"
         build "fileserver"
         build "tunnel"
-<<<<<<< HEAD
-        build "manage"
-
-=======
->>>>>>> flaskless-aio
+        
         rm -rf build
     else
         build $2

@@ -18,6 +18,7 @@ tpi-add filename [options]
 filename : Name of file to add in sharing queue
 
 [options]
+--nomd5
 --p : Add file to private queue 
 --f : Force add file to queue, overwrite existing entry.     
 """
@@ -25,6 +26,7 @@ filename : Name of file to add in sharing queue
 args = {
     "p":False,
     "f":False,
+    "nomd5":False
 }
 
 for arg in sys.argv[1:]:
@@ -60,6 +62,7 @@ async def main():
     file = pathlib.abspath(args['filename'])
     if not pathlib.isfile(file):
         return 'File does not exist'
+    
     request = HTTPRequest(
         'post',
         config['server_config']['local']['host'],
@@ -67,7 +70,8 @@ async def main():
         '/file/new',
         json = {
             "file":file,
-            "private":args['p']
+            "private":args['p'],
+            "md5check": not args['nomd5']
         }
     )
     await request.make_request()

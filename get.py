@@ -20,13 +20,15 @@ filename : Name of file to add in sharing queue
 [options]
 -o  : output filename
 -h  : hostname  
+-l  : localhost
 --ov : Force add file to queue, overwrite existing entry.     
 """
 
 args = {
     "o":False,
     "h":False,
-    "ov":False
+    "ov":False,
+    "l":False
 }
 
 for arg in sys.argv[1:]:
@@ -54,6 +56,28 @@ async def main():
     request:HTTPRequest = None
     if args['h']:
         url = f"{args['h']}.{config['server_config']['remote']['host']}"
+        request = HTTPRequest(
+                'get',
+                url,
+                config['server_config']['remote']['port'],
+                '/file/'+args['token'],
+                stream=True,
+                headers={
+                    "authentication":config['account_keys']['public'] if args['h'] else None
+                }
+            )
+    elif args['l']:
+        host,port = args['l'].split(":")
+        request = HTTPRequest(
+                'get',
+                host,
+                port,
+                '/file/'+args['token'],
+                stream=True,
+                headers={
+                    "authentication":config['account_keys']['public'] if args['h'] else None
+                }
+            )
     else:
         request = HTTPRequest(
             'get',
@@ -68,16 +92,17 @@ async def main():
         else:
             return "Error, Token not found"
 
-    request = HTTPRequest(
-            'get',
-            url,
-            config['server_config']['remote']['port'],
-            '/file/'+args['token'],
-            stream=True,
-            headers={
-                "authentication":config['account_keys']['public'] if args['h'] else None
-            }
-        )
+        request = HTTPRequest(
+                'get',
+                url,
+                config['server_config']['remote']['port'],
+                '/file/'+args['token'],
+                stream=True,
+                headers={
+                    "authentication":config['account_keys']['public'] if args['h'] else None
+                }
+            )
+
     await request.make_request()    
     if request.headers.status_code == '200':
         if request.headers.content_length:
@@ -109,12 +134,14 @@ async def main():
 
             total_time = time.time() - start
             print (f"[{bullet}] Downloaded {(total/(1024)):2f} in {total_time:2f} seconds")
-            print (f"[{bullet}] Checking MD5")
-            _, md5,*_ = popen( f"CertUtil -hashfile {file_path} MD5").read().split("\n")
-            if request.headers.md5 == md5:
-                print (f"[{bullet}] Checking succesfull")
-            else:
-                print (f"[{bullet}] MD5 does not match")
+
+            if request.headers.md5 != 'NOCHECK':
+                print (f"[{bullet}] Checking MD5")
+                _, md5,*_ = popen( f"CertUtil -hashfile \"{file_path}\" MD5").read().split("\n")
+                if request.headers.md5 == md5:
+                    print (f"[{bullet}] Checking succesfull")
+                else:
+                    print (f"[{bullet}] MD5 does not match")
     elif request.headers.status_code == '404':
         return 'File token not found'
 
