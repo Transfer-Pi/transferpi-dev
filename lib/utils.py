@@ -1,9 +1,12 @@
 from .__imports__ import (
-            dumps,loads,pathlib,stat
+            dumps,loads,pathlib,stat,asyncio
         )
 
 from .headers import Header,ResponseHeader
 from .mime_types import raw_text
+
+import aiofiles as io
+import time
 
 def text_response(
         text:str,
@@ -31,7 +34,7 @@ def json_response(
     return response / data
 
 
-def send_file(file:str,request,headers:dict=dict()):  
+async def send_file(file:str,request,headers:dict=dict()):  
     head = ResponseHeader()
     head.status_code = 200
     head.message = 'OK'
@@ -45,12 +48,13 @@ def send_file(file:str,request,headers:dict=dict()):
         head[key.title().replace("_","-")] = val
 
     request.writer.write(head.encode())
-    with open(file,"rb") as file_stream:
+    async with io.open(file, mode='rb') as fstream:
         while True:
-            send_bit =file_stream.read(1024)
-            if not send_bit:
+            send_bit = await fstream.read(1024)
+            if send_bit and not request.writer.is_closing():
+                request.writer.write(send_bit)
+            else:
                 break
-            request.writer.write(send_bit)
 
     request.writer.close()
     return False

@@ -104,7 +104,7 @@ class FileManager:
                     "filename" : rec.filename,
                     "md5" : rec.md5
                 }
-                response = send_file(
+                response = await send_file(
                         rec.file,
                         request,
                         headers=headers
