@@ -74,7 +74,11 @@ async def main():
             "md5check": not args['nomd5']
         }
     )
-    await request.make_request()
+    try:
+        await request.make_request()
+    except ConnectionRefusedError:
+        return 'Connection refused start the tunnel first.'
+
     if request.headers.status_code == '200':
         data = request.get_json()
         for key in keys:

@@ -36,7 +36,11 @@ async def main():
         config['server_config']['local']['port'],
         '/file/'+token
     )
-    await request.make_request()
+    try:
+        await request.make_request()
+    except ConnectionRefusedError:
+        return 'Connection refused please start the server.'
+
     if request.headers.status_code == '200':
         data = request.get_json()
         print (data['message'])
