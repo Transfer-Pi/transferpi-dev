@@ -235,6 +235,10 @@ async def save_config(request:Request,config):
 
 
 if __name__ == "__main__":
+
+    with open(pathlib.join(PATH,"service","tunnel.pid"),"w+") as file:
+        file.write(str(getpid()))
+
     try:
         asyncio.run(tunnel_manager.init())
     except ConnectionError:

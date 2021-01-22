@@ -2,7 +2,7 @@ from lib.__imports__ import (
     pathlib,environ,loads,sys,asyncio,popen
 )
 from lib.requests import HTTPRequest
-
+from os import get_terminal_size
 
 """
 App config
@@ -17,6 +17,27 @@ tpi-list
 """
 
 path   = pathlib.join(environ['USERPROFILE'],'.transferpi')
+
+top_left = '┏'
+top_right = '┓'
+bottom_left = '┗'
+bottom_right = '┛'
+hr = '━'
+vr = '┃'
+cross = '╋'
+t_left = '┣'
+t_right = '┫'
+t_down = '┻'
+t_up = '┳'
+
+col,row = get_terminal_size()
+col -= 2
+row_0 = int(col*(3/4)) - 2
+row_1 = int(col*(1/4)) - 2
+
+def format_row(filename,token,*args,**kwargs):
+
+    return f"{vr} {token}{' '*(row_1-len(token))}{vr} {filename}{' '*(row_0-len(filename))}{vr}"
 
 try:
     with open(pathlib.join(path,'config.json'),'r') as file:
@@ -38,8 +59,13 @@ async def main():
 
     if request.headers.status_code == '200':
         data = request.get_json()['tokens']
+        print (f"{top_left}{hr*(row_1+1)}{t_up}{hr*(row_0+1)}{top_right}")
+        print (format_row(filename='Filename',token='Token'))
+        
+        print (f"{t_left}{hr*(row_1+1)}{cross}{hr*(row_0+1)}{t_right}")
         for item in data:
-            print (f"{item['filename']} {item['token']}")
+            print (format_row(**item))
+        print (f"{bottom_left}{hr*(row_1+1)}{t_down}{hr*(row_0+1)}{bottom_right}")
 
     print ('\a')
     return False

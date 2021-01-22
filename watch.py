@@ -6,10 +6,10 @@ import sys
 config = {
     "proc":watcher.PROCESS,
     "trigger":["python",file],
-    "mode":1,
+    "mode":0,
     "path":"./",
     "files":[
-        
+        file
     ],
 }
 

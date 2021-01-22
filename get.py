@@ -66,6 +66,7 @@ async def main():
                     "authentication":config['account_keys']['public'] if args['h'] else None
                 }
             )
+            
     elif args['l']:
         host,port = args['l'].split(":")
         request = HTTPRequest(

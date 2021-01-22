@@ -21,7 +21,8 @@ then
     if [[ $# == 1 ]]
     then 
         rm -rf dist/bin/*
-        build "manage" "--icon=dist/data/logo.ico"
+        build "manage" "--icon=dist/data/logo.ico --noconsole"
+        build "config"
         build "add"
         build "get"
         build "list"
