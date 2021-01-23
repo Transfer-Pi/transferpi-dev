@@ -158,7 +158,7 @@ class FileManager:
             file=md5_sum
         ))
         
-        data['filename'] = data['file'].split("\\")[-1]
+        *_,data['filename'] = pathlib.split(data['file'])
         data['token'] = token
         data['time'] = dt.now().strftime("%Y-%m-%d %X")
         _, data['md5'],*_ = popen( f"CertUtil -hashfile \"{data['file']}\" MD5").read().split("\n") if data['md5check'] else (None,'NOCHECK',None)

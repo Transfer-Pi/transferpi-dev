@@ -87,6 +87,7 @@ async def main():
     return False
 
 if __name__ == "__main__":
-    if (exit_code := asyncio.run(main())):
+    exit_code = asyncio.run(main())
+    if exit_code:
         print (exit_code)
     

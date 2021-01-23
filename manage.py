@@ -1,26 +1,110 @@
-from os import path as pathlib,environ
-
 import tkinter as tk
 
 from tkinter import *
-from tkinter.filedialog import askopenfilenames
+from tkinter.filedialog import askopenfilename
+
+from lib.__imports__ import (
+    pathlib,environ,loads,sys,asyncio,popen
+)
+from lib.requests import HTTPRequest
 from subprocess import Popen, PIPE, call
 
 PATH = pathlib.join(environ['USERPROFILE'], ".transferpi")
 CONFIGPATH = pathlib.join(PATH, "config.json")
 
-class AddFile(object):
-    def __init__(self,master,file=''):
+response = None
+keys = [
+    "filename",
+    "url",
+    "token",
+    "time",
+    "md5",
+    "private",
+    
+]
+
+try:
+    with open(pathlib.join(PATH,'config.json'),'r') as file:
+        config = loads(file.read())
+except:
+    print ("Config not found !")
+
+async def add_file(args):    
+    request = HTTPRequest(
+        'post',
+        config['server_config']['local']['host'],
+        config['server_config']['local']['port'],
+        '/file/new',
+        json = {
+            "file":args['filename'],
+            "private":args['p'],
+            "md5check": not args['nomd5']
+        }
+    )
+    try:
+        await request.make_request()
+    except ConnectionRefusedError:
+        return 'Connection refused start the tunnel first.'
+
+    if request.headers.status_code == '200':
+        return request.get_json()
+
+    return False
+
+class FileCard(object):
+    def __init__(self,master,response):
+        self.response = response
+
+        self._master = master
         self.master = Toplevel(master)
-        self.master.geometry(f"+{20}+{20}")
+        self.master.geometry(f"+{300}+{300}")
         self.master.overrideredirect(True)
 
         self.frm_b1 = tk.Frame(self.master,height=2)
         self.frm_ttl = tk.Frame(self.master)
         self.frm_b2 = tk.Frame(self.master,height=2)
-        self.frm_btn = tk.Frame(self.master)
+        self.frm_main = tk.Frame(self.master,width=15,relief = tk.GROOVE)
         
-        self.txt_ttl = tk.Label(self.frm_ttl,text='Add File',height=1,width=28)
+        self.txt_ttl = tk.Label(self.frm_ttl,text='',height=1,width=35)
+        self.txt_ttl.pack(side=tk.LEFT)
+        self.txt_ttl.bind("<B1-Motion>", self.drag)
+        
+        labels = []
+        for key in keys:
+            labels.append(
+                Label(self.frm_main,text=f'{key} : {response[key]}')
+            )
+        
+        for label in labels:
+            label.pack(side=tk.TOP)
+
+        self.frm_b1.pack(side=tk.TOP)
+        self.frm_ttl.pack(side=tk.TOP)
+        self.frm_b2.pack(side=tk.TOP)
+        self.frm_main.pack(side=tk.BOTTOM)
+
+    def on_closing(self,):
+        return
+
+    def drag(self,event):
+        self.master.geometry(f"+{event.x_root}+{event.y_root}")
+
+class AddFile(object):
+    def __init__(self,master,file):
+        self._master = master
+        self.master = Toplevel(master)
+        self.master.geometry(f"+{300}+{300}")
+        self.master.overrideredirect(True)
+
+        self.file = file
+        *_,self.file_name = pathlib.split(file)
+
+        self.frm_b1 = tk.Frame(self.master,height=2)
+        self.frm_ttl = tk.Frame(self.master)
+        self.frm_b2 = tk.Frame(self.master,height=2)
+        self.frm_btn = tk.Frame(self.master,width=15,relief = tk.GROOVE)
+        
+        self.txt_ttl = tk.Label(self.frm_ttl,text='Add File',height=1,width=35)
         self.txt_ttl.pack(side=tk.LEFT)
         self.txt_ttl.bind("<B1-Motion>", self.drag)
 
@@ -34,28 +118,71 @@ class AddFile(object):
         )
         self.btn_cls.pack(side=tk.RIGHT)
     
-        self.btn_fs_service = Button( 
+        self.lbl_fn = Label( 
             self.frm_btn, 
-            text="Start Server", 
-            relief = tk.GROOVE,
-            width=15,
-            height=3
+            text=self.file_name, 
+            relief = tk.FLAT,
+            width=20,
+            height=5
         )
-        self.btn_fs_service.pack(side=tk.LEFT)
-
-        self.btn_file = Button(
-            self.frm_btn,
-            text='Add Files',
-            relief = tk.GROOVE,
-            width=15,
-            height=3
-        )
-        self.btn_file.pack()
+        self.lbl_fn.pack(side=tk.LEFT)
         
+        # CheckBoxes
+        self.val_pvt = IntVar()
+        self.btn_pvt = Checkbutton(
+            self.frm_btn,
+            text='Private',
+            width=15,
+            height=1,
+            justify=LEFT,
+            variable=self.val_pvt
+        )
+        self.btn_pvt.pack()
+
+        self.val_lcl = IntVar()
+        self.btn_lcl = Checkbutton(
+            self.frm_btn,
+            text='Local',
+            width=15,
+            height=1,
+            justify=LEFT,
+            variable=self.val_lcl
+        )
+        self.btn_lcl.pack()
+
+        self.val_md5 = IntVar()
+        self.btn_md5 = Checkbutton(
+            self.frm_btn,
+            text='NoMD5',
+            width=15,
+            height=1,
+            justify=LEFT,
+            variable=self.val_md5
+        )
+        self.btn_md5.pack()
+        
+        self.btn_add = Button( 
+            self.frm_btn, 
+            text='Add', 
+            relief = tk.GROOVE,
+            command=self.add
+        )
+        self.btn_add.pack()
+
         self.frm_b1.pack(side=tk.TOP)
         self.frm_ttl.pack(side=tk.TOP)
         self.frm_b2.pack(side=tk.TOP)
         self.frm_btn.pack(side=tk.BOTTOM)
+
+    def add(self,):
+        args = {
+            "p":bool(self.val_pvt.get()),
+            "f":False,
+            "nomd5":bool(self.val_md5.get()),
+            "filename":self.file
+        }
+        globals()['response'] = asyncio.run(add_file(args))
+        self.cleanup()
 
     def drag(self,event):
         self.master.geometry(f"+{event.x_root}+{event.y_root}")
@@ -80,7 +207,15 @@ class Manager:
         self.txt_ttl.pack(side=tk.LEFT)
         self.txt_ttl.bind("<B1-Motion>", self.drag)
 
-        self.btn_cls = Button(self.frm_ttl,text='❌',height=1,width=2,relief = tk.GROOVE,command=self.on_closing)
+        self.btn_cls = Button(
+            self.frm_ttl,
+            text='❌',
+            height=1,
+            width=2,
+            relief = tk.GROOVE,
+            command=self.on_closing
+        )
+
         self.btn_cls.pack(side=tk.RIGHT)
     
         self.btn_fs_service = Button( 
@@ -95,7 +230,7 @@ class Manager:
 
         self.btn_file = Button(
             self.frm_btn,
-            text='Add Files',
+            text='Add File',
             command=self.load_file,
             relief = tk.GROOVE,
             width=15,
@@ -109,9 +244,15 @@ class Manager:
         self.frm_btn.pack(side=tk.BOTTOM)
 
     def load_file(self,):
-        # files = askopenfilenames()
-        self.add = AddFile(self.master)
-        self.master.wait_window(self.add.master)
+        file = askopenfilename()
+        if file:
+            self.add = AddFile(self.master,file)
+            self.master.wait_window(self.add.master)
+        
+        response = globals()['response']
+        if response:
+            self.card = FileCard(self.master,response)
+            self.master.wait_window(self.card.master)
 
     def drag(self,event):
         self.master.geometry(f"+{event.x_root}+{event.y_root}")
