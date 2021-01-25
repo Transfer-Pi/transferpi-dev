@@ -65,18 +65,34 @@ class FileCard(object):
         self.frm_b2 = tk.Frame(self.master,height=2)
         self.frm_main = tk.Frame(self.master,width=15,relief = tk.GROOVE)
         
-        self.txt_ttl = tk.Label(self.frm_ttl,text='',height=1,width=35)
-        self.txt_ttl.pack(side=tk.LEFT)
+        self.txt_ttl = tk.Label(self.frm_ttl,text='File Added Successfully',height=1,width=60)
+        self.txt_ttl.pack(side=tk.LEFT,fill=tk.X)
         self.txt_ttl.bind("<B1-Motion>", self.drag)
         
+        self.btn_cls = Button(
+            self.frm_ttl,
+            text='❌',
+            height=1,
+            width=2,
+            relief = tk.GROOVE,
+            command=self.on_closing
+        )
+        self.btn_cls.pack(side=tk.RIGHT)
+
         labels = []
-        for key in keys:
+        for key in reversed(keys):
+            w = Text(self.master, height=1, borderwidth=0,width=55)
+            w.insert(1.0, f' {key} {" "*(10-len(key))} {response[key]}')
+            w.pack()
+            w.configure(state="disabled")
+            w.configure(inactiveselectbackground=w.cget("selectbackground"))
+
             labels.append(
-                Label(self.frm_main,text=f'{key} : {response[key]}')
+                w
             )
         
         for label in labels:
-            label.pack(side=tk.TOP)
+            label.pack(side=tk.BOTTOM)
 
         self.frm_b1.pack(side=tk.TOP)
         self.frm_ttl.pack(side=tk.TOP)
@@ -84,6 +100,7 @@ class FileCard(object):
         self.frm_main.pack(side=tk.BOTTOM)
 
     def on_closing(self,):
+        self.master.destroy()
         return
 
     def drag(self,event):
