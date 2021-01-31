@@ -2,6 +2,7 @@ from sys import exit, argv
 from os import environ, popen, path as pathlib
 from json import dumps, loads
 from webbrowser import open as browser
+from subprocess import Popen,PIPE,call
 
 doc = """Transfer Pi v0.0.13
 
@@ -19,14 +20,14 @@ login [options]   : to open login browser window
 info = """|------------------------------------|
 |           Transfer Pi              |
 |------------------------------------|
-| * CLI Version 0.0.1                |
-| * Tunnel Version 0.0.1             |
-| * Fileserver Version 0.0.1         |
+| * CLI Version 0.0.2c               |
+| * Tunnel Version 0.0.2d            |
+| * Fileserver Version 0.0.2d        |
 |------------------------------------|"""
 
-_PATH = pathlib.join(environ['HOME'], ".transferpi")
-_CONFIGPATH = pathlib.join(_PATH, "config.json")
-_TYPESETTINGS = {
+PATH         = pathlib.join(environ['HOME'], ".transferpi")
+CONFIGPATH   = pathlib.join(PATH, "config.json")
+TYPESETTINGS = {
     'dict': dict,
     'list': list,
     'int': int,
@@ -35,7 +36,6 @@ _TYPESETTINGS = {
 }
 
 single_args = ['config', 'info', 'login']
-
 
 def parseArgs(argv):
     if not len(argv):
@@ -55,7 +55,7 @@ def handleServices(action: str, services: list):
 def loadConfig():
     config = dict()
     try:
-        config = loads(open(_CONFIGPATH, "r").read())
+        config = loads(open(CONFIGPATH, "r").read())
     except:
         exit(print("Error, Config File Not Found"))
     return config
@@ -73,8 +73,8 @@ def handlerConfig(_, option):
         except:
             exit(print(f"Key Not Found, {p}"))
     *_, typesetting = typesetting.split("=")
-    _config[key] = _TYPESETTINGS[typesetting](value)
-    open(_CONFIGPATH, "w+").write(dumps(config))
+    _config[key] = TYPESETTINGS[typesetting](value)
+    open(CONFIGPATH, "w+").write(dumps(config))
 
 
 def handlerHost(_, option):
@@ -88,11 +88,11 @@ def handlerHost(_, option):
     elif action == 'add':
         config['allowed_hosts'] += key
         config['allowed_hosts'] = list(set(config['allowed_hosts']))
-        open(_CONFIGPATH, "w+").write(dumps(config))
+        open(CONFIGPATH, "w+").write(dumps(config))
     elif action == 'remove':
         try:
             config['allowed_hosts'].remove(*key)
-            open(_CONFIGPATH, "w+").write(dumps(config))
+            open(CONFIGPATH, "w+").write(dumps(config))
         except:
             pass
 
@@ -120,15 +120,17 @@ def printInfo(*args):
 
 def handleLogin(*args):
     try:
-        open(_CONFIGPATH, "r").read()
+        open(CONFIGPATH, "r").read()
     except:
-        open(_CONFIGPATH,
+        open(CONFIGPATH,
              "w+").write(r'{"server_config":{"local":{"port":2121,"host":"localhost"}}}')
-    popen(f"sudo systemctl start tpi-fileserver").read()
+            
+    proc_fs = Popen(['tpi-fileserver'], stdout=PIPE, stdin=PIPE)
     browser("https://transferpi.tk/login")
-    input("* Press Enter After Completing Login")
-    popen(f"sudo systemctl stop tpi-fileserver").read()
-    print("* Config Saved Succesfully")
+    input(" * Press Enter After Completing Login \n * Starting Listener\n")
+    call(['kill',  str(proc_fs.pid)],
+         stdout=PIPE, stdin=PIPE)
+    print(" * Config Saved Succesfully")
 
 
 handlers = {

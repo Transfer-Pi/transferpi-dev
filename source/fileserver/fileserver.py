@@ -1,10 +1,11 @@
 import time
 
-from os import environ, path as pathlib, popen
-from sys import exit
+from os import environ, path as pathlib, popen, getpid
+from sys import exit, argv
 from json import loads
 
 from flask import Flask, request, send_file, make_response, render_template
+from flask.logging import default_handler
 from flask_cors import CORS
 
 from random import choice
@@ -14,10 +15,20 @@ from requests import post
 
 import jsondb
 import logger
+import logging
 
+
+"""
+App Config
+
+linux/unix : ✔️
+windows    : ⭕
+mac        : ⭕
+"""
 
 _PATH = pathlib.join(environ['HOME'], ".transferpi")
 _LOGGER = logger.Logger(out=pathlib.join(_PATH, "logs", "server_logs.txt"))
+_DEBUG = "debug" in argv
 
 try:
     _CONFIG = loads(open(pathlib.join(_PATH, "config.json"), "r").read())
@@ -26,6 +37,10 @@ except:
 
 app = Flask(__name__, template_folder=pathlib.join(_PATH, "data", "templates"))
 CORS(app=app)
+
+log = logging.getLogger('werkzeug')
+log.disabled = not _DEBUG
+
 
 CONN = jsondb.Cursor(path=pathlib.join(_PATH, "data"), logger=_LOGGER)
 CONN.createDB("TPI")
@@ -129,17 +144,16 @@ class FileManager:
         else:
             token = self.__token(4)
 
-        self._CURSOR.files.insertOne(jsondb.Record(
-            token=token,
-            file=md5_sum
-        ))
-
         data['filename'] = data['file'].split("/")[-1]
         data['token'] = token
         data['time'] = dt.now().strftime("%Y-%m-%d %X")
         data['md5'], *_ = popen(f"md5sum {data['file']}").read().split(" ")
-        data['url'] = f"https://transferpi.tk/token/{token}"
+        data['url'] = f"https://transferpi.tk/{token}"
         self._CURSOR.tokens.insertOne(jsondb.Record(**data))
+        self._CURSOR.files.insertOne(jsondb.Record(
+            token=token,
+            file=md5_sum
+        ))
         return data
 
     def PUT(self, request: request, *args, **kwargs):
@@ -178,7 +192,6 @@ class FileManager:
 
 FILE_MANAGER = FileManager(DB)
 
-
 @app.route("/file/<string:token>", methods=['GET', 'POST', 'PUT', 'DELETE'])
 def file(token):
     if request.method != 'GET' and ('Authentication' not in request.headers or request.headers['Authentication'] != _CONFIG['account_keys']['private']):
@@ -195,6 +208,7 @@ def serve_static(_dir, _file):
 @app.route("/save_config/<path:config>", methods=['GET'])
 def save_token(config: str):
     open(pathlib.join(_PATH, "config.json"), "w+").write(config)
+    print(" * Config Saved Succesfully, Press enter to exit")
     return "Config Saved Successfully"
 
 
@@ -207,7 +221,10 @@ def index():
 
 
 if __name__ == "__main__":
+    with open(pathlib.join(_PATH,"logs","fs.pid"),"w+") as PID:
+        PID.write(getpid().__str__())
     app.run(
         host=_CONFIG['server_config']['local']['host'],
         port=_CONFIG['server_config']['local']['port'],
+        debug=_DEBUG,
     )
