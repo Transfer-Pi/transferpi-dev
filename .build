@@ -1,2 +1,3 @@
-[platform] linux
-[version] 0.0.2d
+[platform] Linux/Windows
+[version] 1.0.0
+[Dev] Windows

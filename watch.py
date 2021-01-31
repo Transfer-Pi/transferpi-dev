@@ -1,12 +1,15 @@
 import watcher
+import sys
+
+*_,file = sys.argv
 
 config = {
     "proc":watcher.PROCESS,
-    "trigger":["python3","./tunnel.py"],
+    "trigger":["python",file],
     "mode":0,
     "path":"./",
     "files":[
-        "tunnel.py"
+        file
     ],
 }
 

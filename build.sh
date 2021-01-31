@@ -1,7 +1,7 @@
 # build script for transferpi
 
 build (){
-    pyinstaller source/$1/$1.py $2
+    pyinstaller $1.py $2
     cp dist/$1/* dist/bin/  -r
     rm -rf dist/$1
     rm $1.spec
@@ -20,14 +20,16 @@ elif [[ $1 == "dist" ]]
 then
     if [[ $# == 1 ]]
     then 
+        rm -rf dist/bin/*
+        build "manage" "--icon=dist/data/logo.ico --noconsole"
+        build "config"
         build "add"
         build "get"
         build "list"
         build "remove"
         build "fileserver"
         build "tunnel"
-        build "manage" "--icon=dist/data/logo.ico"
-
+        
         rm -rf build
     else
         build $2
@@ -44,6 +46,8 @@ then
     ./dist/bin/list
     echo "* Running remove"
     ./dist/bin/remove
+    echo "* Running manage"
+    ./dist/bin/manage
 
     echo "Testing CLI Tools With Basic Arguments"
     echo "* Running add"

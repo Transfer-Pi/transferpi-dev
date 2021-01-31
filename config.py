@@ -1,20 +1,23 @@
 from sys import exit, argv
-from os import environ, popen, path as pathlib
-from json import dumps, loads
 from webbrowser import open as browser
 from subprocess import Popen,PIPE,call
 
-doc = """Transfer Pi v0.0.13
+from lib.web import App,Request
+from lib.utils import json_response 
 
-start [service]   : starts provided service [ fileserver | tunnel ]
-restart [service] : restarts provided service [ fileserver | tunnel ]
-stop [service]    : stops provided service [ fileserver | tunnel ]
-set [key=value]   : to modify config.json 
+from lib.__imports__ import (
+    Thread,
+    pathlib,environ,popen,
+    loads,dumps
+)
+
+doc = """Transfer Pi v0.0.13
+set [key=value]   : modify config.json 
     [type=type]     ex. tpi-manage set server_config:local:port=8081 type=int
-host [act=value]  : to add and remove hosts from allowed list [ add | remove | get]
+host [act=value]  : add and remove hosts from allowed list [ add | remove | get]
                     ex. tpi-manage host add=host_public_key
 config [options]  : prints current config
-login [options]   : to open login browser window 
+login [options]   : open login browser window 
 """
 
 info = """|------------------------------------|
@@ -25,9 +28,9 @@ info = """|------------------------------------|
 | * Fileserver Version 0.0.2d        |
 |------------------------------------|"""
 
-PATH         = pathlib.join(environ['HOME'], ".transferpi")
-CONFIGPATH   = pathlib.join(PATH, "config.json")
-TYPESETTINGS = {
+_PATH = pathlib.join(environ['HOME'], ".transferpi")
+_CONFIGPATH = pathlib.join(_PATH, "config.json")
+_TYPESETTINGS = {
     'dict': dict,
     'list': list,
     'int': int,
@@ -35,7 +38,7 @@ TYPESETTINGS = {
     'float': float
 }
 
-single_args = ['config', 'info', 'login']
+single_args = ['config', 'info', 'login', 'manage']
 
 def parseArgs(argv):
     if not len(argv):
@@ -51,7 +54,6 @@ def handleServices(action: str, services: list):
     for service in services:
         popen(f"sudo systemctl {action} tpi-{service}").read()
 
-
 def loadConfig():
     config = dict()
     try:
@@ -59,7 +61,6 @@ def loadConfig():
     except:
         exit(print("Error, Config File Not Found"))
     return config
-
 
 def handlerConfig(_, option):
     config = loadConfig()
@@ -119,18 +120,26 @@ def printInfo(*args):
 
 
 def handleLogin(*args):
+    app = App()
+    @app.route("/save_config")
+    async def index(request:Request):
+        with open(_CONFIGPATH,'w+') as file:
+            config = str(await request.content,encoding='utf-8')
+            file.write(config)
+        
+        return json_response(data={
+            'message':'Config saved succesfully'
+        })
+
+    browser("http://transferpi.tk/login")
+    print("* Press Ctrl + C to exit after saving config")
     try:
-        open(CONFIGPATH, "r").read()
-    except:
-        open(CONFIGPATH,
-             "w+").write(r'{"server_config":{"local":{"port":2121,"host":"localhost"}}}')
-            
-    proc_fs = Popen(['tpi-fileserver'], stdout=PIPE, stdin=PIPE)
-    browser("https://transferpi.tk/login")
-    input(" * Press Enter After Completing Login \n * Starting Listener\n")
-    call(['kill',  str(proc_fs.pid)],
-         stdout=PIPE, stdin=PIPE)
-    print(" * Config Saved Succesfully")
+        app.serve(**{
+            "host":"localhost",
+            "port":2121
+        })
+    except KeyboardInterrupt:
+        exit()
 
 
 handlers = {
@@ -147,7 +156,6 @@ handlers = {
 
 def main(action: str, options: list):
     handlers[action](action, options)
-
 
 if __name__ == "__main__":
     main(*parseArgs(argv[1:]))
