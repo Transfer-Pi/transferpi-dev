@@ -34,14 +34,14 @@ def json_response(
     return response / data
 
 
-async def send_file(file:str,request,headers:dict=dict()):  
+async def send_file(file:str,request,headers:dict=dict(),chunk_size=1024):  
     head = ResponseHeader()
     head.status_code = 200
     head.message = 'OK'
     head.access_control_allow_origin = "*"
     head.connection = "Keep-Alive"
     head.content_type = 'application/octet-stream'
-    head.keep_alive: "timeout=1, max=999"
+    head.keep_alive = "timeout=1, max=999"
     head.content_length = stat(file).st_size
     
     for key,val in headers.items():
@@ -50,7 +50,7 @@ async def send_file(file:str,request,headers:dict=dict()):
     request.writer.write(head.encode())
     async with io.open(file, mode='rb') as fstream:
         while True:
-            send_bit = await fstream.read(1024)
+            send_bit = await fstream.read(chunk_size)
             if send_bit and not request.writer.is_closing():
                 request.writer.write(send_bit)
             else:

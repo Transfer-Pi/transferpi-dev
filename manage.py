@@ -38,7 +38,8 @@ async def add_file(args):
         json = {
             "file":args['filename'],
             "private":args['p'],
-            "md5check": not args['nomd5']
+            "md5check": not args['nomd5'],
+            "local":args['l']
         }
     )
     try:
@@ -87,9 +88,7 @@ class FileCard(object):
             w.configure(state="disabled")
             w.configure(inactiveselectbackground=w.cget("selectbackground"))
 
-            labels.append(
-                w
-            )
+            labels.append(w)
         
         for label in labels:
             label.pack(side=tk.BOTTOM)
@@ -119,9 +118,9 @@ class AddFile(object):
         self.frm_b1 = tk.Frame(self.master,height=2)
         self.frm_ttl = tk.Frame(self.master)
         self.frm_b2 = tk.Frame(self.master,height=2)
-        self.frm_btn = tk.Frame(self.master,width=15,relief = tk.GROOVE)
+        self.frm_btn = tk.Frame(self.master,width=35,relief = tk.GROOVE)
         
-        self.txt_ttl = tk.Label(self.frm_ttl,text='Add File',height=1,width=35)
+        self.txt_ttl = tk.Label(self.frm_ttl,text='Add File',height=1,width=45)
         self.txt_ttl.pack(side=tk.LEFT)
         self.txt_ttl.bind("<B1-Motion>", self.drag)
 
@@ -134,14 +133,12 @@ class AddFile(object):
             command=self.cleanup
         )
         self.btn_cls.pack(side=tk.RIGHT)
-    
-        self.lbl_fn = Label( 
-            self.frm_btn, 
-            text=self.file_name, 
-            relief = tk.FLAT,
-            width=20,
-            height=5
-        )
+        
+        self.lbl_fn = Text(self.frm_btn, height=5, borderwidth=0,width=25)
+        self.lbl_fn.insert(1.0, self.file_name)
+        self.lbl_fn.pack()
+        self.lbl_fn.configure(state="disabled")
+        self.lbl_fn.configure(inactiveselectbackground=self.lbl_fn.cget("selectbackground"))
         self.lbl_fn.pack(side=tk.LEFT)
         
         # CheckBoxes
@@ -196,6 +193,7 @@ class AddFile(object):
             "p":bool(self.val_pvt.get()),
             "f":False,
             "nomd5":bool(self.val_md5.get()),
+            "l":bool(self.val_lcl.get()),
             "filename":self.file
         }
         globals()['response'] = asyncio.run(add_file(args))

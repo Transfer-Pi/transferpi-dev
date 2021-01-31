@@ -18,15 +18,17 @@ tpi-add filename [options]
 filename : Name of file to add in sharing queue
 
 [options]
---nomd5
+--nomd5 : Skip MD5 check.
 --p : Add file to private queue 
 --f : Force add file to queue, overwrite existing entry.     
+--l : Supports download over local network.
 """
 
 args = {
     "p":False,
     "f":False,
-    "nomd5":False
+    "nomd5":False,
+    "l":False
 }
 
 for arg in sys.argv[1:]:
@@ -52,7 +54,7 @@ keys = [
     "time",
     "md5",
     "private",
-    
+    "local"
 ]
 
 async def main():
@@ -71,7 +73,8 @@ async def main():
         json = {
             "file":file,
             "private":args['p'],
-            "md5check": not args['nomd5']
+            "md5check": not args['nomd5'],
+            "local":args['l']
         }
     )
     try:

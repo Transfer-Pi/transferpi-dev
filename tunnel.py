@@ -3,6 +3,7 @@
 import time
 import jsondb
 import logger
+import re
 
 from random import choice
 from hashlib import md5
@@ -56,6 +57,8 @@ class FileManager:
     """
     REST Object to manage file related resources
     """
+    
+    urlxre = re.compile("\d.\d.\d.\d")
 
     def __init__(self, cursor: jsondb.Database,config:dict):
         self.cursor = cursor
@@ -99,11 +102,33 @@ class FileManager:
                     },status_code= 405, message='Not Allowed')
 
             if pathlib.isfile(rec.file):
+                if self.urlxre.match(request.header.host):
+                    if rec.local:
+                        headers = {
+                        "content_disposition" : f'attachment; filename={rec.filename}',
+                        "filename" : rec.filename,
+                        "md5" : rec.md5
+                        }
+                        
+                        response = await send_file(
+                                rec.file,
+                                request,
+                                headers=headers,
+                                chunk_size=10240
+                            )
+                        return response       
+                    else:
+                        return json_response({
+                            "message":"File not open for local sharing",
+                            "status":False
+                        },status_code=401)
+
                 headers = {
                     "content_disposition" : f'attachment; filename={rec.filename}',
                     "filename" : rec.filename,
                     "md5" : rec.md5
                 }
+                
                 response = await send_file(
                         rec.file,
                         request,
