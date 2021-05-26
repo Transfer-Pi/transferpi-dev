@@ -1,38 +1,119 @@
-.App {
-  text-align: center;
+*{
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+svg{
+  cursor: pointer;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.app {
+  padding: 10px;
+
+  height: 100vh;
+  width: 100vw;
+
+  background: whitesmoke;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.header {
+  height: 58px;
   display: flex;
-  flex-direction: column;
   align-items: center;
+}
+
+.header .head{
+  height: 100%;
+  display: flex;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  align-items: center;
 }
 
-.App-link {
-  color: #61dafb;
+.header .head:first-child{
+  width: 38px;
+  height: 38px;
+  background: white;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.header .head:nth-child(2){
+  width: calc( 100% - 76px);
+  height: 38px;
+  background: white;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+
+  border: 3px solid #333;
+  height: 38px;
+  margin: 0px 10px;
 }
+
+.header .head:nth-child(2) svg{
+  height: 24px;
+}
+
+.header .head:nth-child(2) input{
+  height: 100%;
+  width: calc( 100% - 38px );
+  border: none
+}
+
+.header .head:nth-child(2) input:focus{
+  border: none;
+  outline: none;
+}
+
+.header .head:last-child{
+  width: 38px;
+  height: 38px;
+  background: white;
+}
+
+.header svg{
+  height: 38px;
+  width: 38px;
+}
+
+.tokens {
+  display: grid;
+  grid-gap: 10px;
+  grid-template-columns: repeat( auto-fill, minmax(30vw, 1fr) );
+}
+
+.token-card {
+  height: 200px;
+  font-size: smaller;
+
+  background: white;
+
+  padding: 10px;
+  display: grid;
+  border: 3px solid #333;
+}
+
+.token-card .row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.token-card .col {
+  font-size: 12px;
+  letter-spacing: 1px;
+
+  font-family: monospace;
+}
+
+.token-card .col:first-child{
+  width: 100px;  
+  font-weight: 600;
+}
+
+
+.users {
+ 
+}
+
+
+
