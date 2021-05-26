@@ -2,7 +2,7 @@ dist/
 *__pycache__
 
 source/add/temp/
-source/fileserver/node_modules/*
+html/node_modules/*
 .vscode
 
 *.ipynb

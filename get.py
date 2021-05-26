@@ -2,7 +2,7 @@ from lib.__imports__ import (
     pathlib,loads,environ,sys,asyncio,popen,time
 )
 from lib.requests import HTTPRequest
-
+from lib.crypt import dec
 
 """
 App config
@@ -123,7 +123,9 @@ async def main():
             print (f"[{bullet}] Downloading {filename}")
             with open(file_path,'wb') as file:
                 for i in range(chunks):
-                    file.write(await request.reader.read(chunk_size))
+                    recv_bits = await request.reader.read(chunk_size)
+                    recv_bits = dec(recv_bits)
+                    file.write(recv_bits)
                     total += chunk_size
                     bar = int(total / chunks_per_bar)
                     sys.stdout.write(f"\r[{bullet}] [{bullet*bar}{' '*(bar_length-bar+1)}] {int(100*(total/content_length))}%")

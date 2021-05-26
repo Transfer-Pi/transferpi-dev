@@ -4,6 +4,7 @@ from .__imports__ import (
 
 from .headers import Header,ResponseHeader
 from .mime_types import raw_text
+from .crypt import enc
 
 import aiofiles as io
 import time
@@ -52,6 +53,7 @@ async def send_file(file:str,request,headers:dict=dict(),chunk_size=1024):
         while True:
             send_bit = await fstream.read(chunk_size)
             if send_bit and not request.writer.is_closing():
+                send_bit = enc(send_bit)
                 request.writer.write(send_bit)
             else:
                 break
